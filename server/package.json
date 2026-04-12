@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "build": "node -e \"console.log('build: no compile step (ESM source)')\"",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {

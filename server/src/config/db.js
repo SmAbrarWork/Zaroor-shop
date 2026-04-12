@@ -1,7 +1,18 @@
 import mongoose from 'mongoose'
 import { env } from './env.js'
 
+let connectPromise = null
+
 export const connectDb = async () => {
-  await mongoose.connect(env.mongoUri)
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection
+  }
+  if (!connectPromise) {
+    connectPromise = mongoose.connect(env.mongoUri).catch((err) => {
+      connectPromise = null
+      throw err
+    })
+  }
+  await connectPromise
   return mongoose.connection
 }
