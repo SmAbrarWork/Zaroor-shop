@@ -314,13 +314,13 @@ VITE_GOOGLE_CLIENT_ID=<same-google-client-id-as-server>
 ---
 
 ## Local Development
-
-```bash
+ 
+```bash 
 # Start dev (with hot-reload)
-docker compose up --build
+docker compose up --build 
 
 # Or without Docker:
-cd server && npm install && npm run dev    # Terminal 1
+cd server && npm install && npm run dev    # Terminal 11
 cd client && npm install && npm run dev    # Terminal 2
 
 # Seed database
