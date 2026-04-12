@@ -5,12 +5,12 @@
   "type": "module",
   "main": "src/index.js",
   "engines": {
-    "node": ">=18"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "build": "node -e \"console.log('build: no compile step (ESM source)')\"",
+    "build": "node ./scripts/vercel-build.mjs",
     "seed": "node src/scripts/seed.js"
   },
   "dependencies": {
