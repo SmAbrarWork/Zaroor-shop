@@ -6,7 +6,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 5000),
   mongoUri:
-    process.env.MONGO_URI ?? 'mongodb://mongo:27017/zeroor_shop',
+    process.env.MONGO_URI ?? 'mongodb://127.0.0.1:27017/zeroor_shop',
   clientUrl: process.env.CLIENT_URL ?? 'http://localhost:3000',
   jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-production',
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
