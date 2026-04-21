@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { register, clearError } from '../features/auth/authSlice'
 import { selectIsAuthenticated, selectAuthLoading, selectAuthError } from '../features/auth/authSelectors'
 import Button from '../components/ui/Button'
+import { API_ORIGIN } from '../utils/api'
 
 export default function Register() {
   const dispatch = useAppDispatch()
@@ -29,7 +30,7 @@ export default function Register() {
   }
 
   const handleGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/google`
+    window.location.href = `${API_ORIGIN}/auth/google`
   }
 
   return (

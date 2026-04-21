@@ -6,6 +6,7 @@ import { selectIsAuthenticated, selectAuthLoading, selectAuthError, selectUser }
 import { fetchCart } from '../features/cart/cartSlice'
 import { addToCartServer } from '../features/cart/cartSlice'
 import Button from '../components/ui/Button'
+import { API_ORIGIN } from '../utils/api'
 
 export default function Login() {
   const dispatch = useAppDispatch()
@@ -77,7 +78,7 @@ export default function Login() {
   }
 
   const handleGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/google`
+    window.location.href = `${API_ORIGIN}/auth/google`
   }
 
   return (
