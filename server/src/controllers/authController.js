@@ -1,6 +1,7 @@
 import { User } from '../models/User.js'
 import { generateToken } from '../middleware/auth.js'
 import passport from '../config/passport.js'
+import { env } from '../config/env.js'
 
 export const register = async (req, res, next) => {
   try {
@@ -47,11 +48,11 @@ export const googleAuth = passport.authenticate('google', {
 export const googleCallback = (req, res, next) => {
   passport.authenticate('google', { session: false }, (err, user) => {
     if (err || !user) {
-      return res.redirect(`${process.env.CLIENT_URL ?? 'http://localhost:3000'}/login?error=google_failed`)
+      return res.redirect(`${env.clientUrl}/login?error=google_failed`)
     }
     const token = generateToken(user._id)
     return res.redirect(
-      `${process.env.CLIENT_URL ?? 'http://localhost:3000'}/login?token=${token}`
+      `${env.clientUrl}/login?token=${token}`
     )
   })(req, res, next)
 }
