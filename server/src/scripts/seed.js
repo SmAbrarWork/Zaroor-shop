@@ -1,12 +1,10 @@
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
+import { env } from '../config/environment.js'
 import { Event } from '../models/Event.js'
 import { Product } from '../models/Product.js'
 import { User } from '../models/User.js'
 
-dotenv.config()
-
-const mongoUri = process.env.MONGO_URI ?? 'mongodb://localhost:27017/zeroor_shop'
+const mongoUri = env.mongoUri
 
 const events = [
   {

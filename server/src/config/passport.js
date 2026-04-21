@@ -2,7 +2,7 @@ import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import { Strategy as LocalStrategy } from 'passport-local'
 import { User } from '../models/User.js'
-import { env } from './env.js'
+import { env } from './environment.js'
 
 passport.use(
   new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {

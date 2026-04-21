@@ -14,7 +14,7 @@ import adminRoutes from './routes/adminRoutes.js'
 import { buildTrackingRoutes } from './routes/trackingRoutes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { TrackingService } from './services/trackingService.js'
-import { env } from './config/env.js'
+import { env } from './config/environment.js'
 import { swaggerSpec } from './config/swagger.js'
 
 const app = express()

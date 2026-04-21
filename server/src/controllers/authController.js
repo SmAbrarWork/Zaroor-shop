@@ -1,7 +1,7 @@
 import { User } from '../models/User.js'
 import { generateToken } from '../middleware/auth.js'
 import passport from '../config/passport.js'
-import { env } from '../config/env.js'
+import { env } from '../config/environment.js'
 
 export const register = async (req, res, next) => {
   try {
