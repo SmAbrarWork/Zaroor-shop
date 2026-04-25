@@ -5,6 +5,79 @@ import { Event } from '../models/Event.js'
 import { Cart } from '../models/Cart.js'
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const PRODUCT_TYPES = ['shirt', 'pants', 'other']
+
+const normalizeArray = (arr) =>
+  Array.isArray(arr)
+    ? arr.map((value) => `${value}`.trim()).filter(Boolean)
+    : []
+
+const buildVariantKey = ({ color = '', size = '', waistSize = '' }) => [color, size, waistSize].join('|')
+
+const normalizeNumberArray = (arr) =>
+  Array.isArray(arr)
+    ? arr
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value))
+    : []
+
+const normalizeProductPayload = (payload = {}) => {
+  const productType = PRODUCT_TYPES.includes(payload.productType) ? payload.productType : 'other'
+  const colors = normalizeArray(payload.options?.colors)
+  const sizes = normalizeArray(payload.options?.sizes)
+  const waistSizes = normalizeNumberArray(payload.options?.waistSizes)
+  const variantStock = Array.isArray(payload.variantStock)
+    ? payload.variantStock
+      .map((entry) => ({
+        color: `${entry?.color || ''}`.trim(),
+        size: `${entry?.size || ''}`.trim(),
+        waistSize: entry?.waistSize === null || entry?.waistSize === undefined || entry?.waistSize === ''
+          ? null
+          : Number(entry?.waistSize),
+        stock: Number(entry?.stock ?? 0),
+      }))
+      .filter((entry) => Number.isFinite(entry.stock) && entry.stock >= 0 && (entry.waistSize === null || Number.isFinite(entry.waistSize)))
+    : []
+  return {
+    ...payload,
+    productType,
+    options: { colors, sizes, waistSizes },
+    variantStock,
+  }
+}
+
+const validateProductPayload = (payload) => {
+  if (payload.productType === 'shirt' && payload.options.sizes.length === 0) {
+    return 'Shirt products require at least one size option'
+  }
+  if (payload.productType === 'pants' && payload.options.waistSizes.length === 0) {
+    return 'Pants products require at least one waist size option'
+  }
+  const seen = new Set()
+  for (const variant of payload.variantStock || []) {
+    if (variant.color && !payload.options.colors.includes(variant.color)) {
+      return `Variant color "${variant.color}" is not part of product colors`
+    }
+    if (variant.size && !payload.options.sizes.includes(variant.size)) {
+      return `Variant size "${variant.size}" is not part of product sizes`
+    }
+    if (variant.waistSize !== null && !payload.options.waistSizes.includes(variant.waistSize)) {
+      return `Variant waist size "${variant.waistSize}" is not part of product waist sizes`
+    }
+    if (payload.productType === 'shirt' && !variant.size) {
+      return 'Shirt variant stock entries must include size'
+    }
+    if (payload.productType === 'pants' && variant.waistSize === null) {
+      return 'Pants variant stock entries must include waist size'
+    }
+    const key = buildVariantKey(variant)
+    if (seen.has(key)) {
+      return 'Duplicate variant stock entries are not allowed'
+    }
+    seen.add(key)
+  }
+  return null
+}
 
 // --- Dashboard Stats ---
 export const getStats = async (_req, res, next) => {
@@ -115,7 +188,7 @@ export const deleteUser = async (req, res, next) => {
 // --- Products ---
 export const getAdminProducts = async (_req, res, next) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }).lean()
+    const products = await Product.find().populate('event', 'name slug').sort({ createdAt: -1 }).lean()
     return res.json({ success: true, data: products })
   } catch (error) {
     return next(error)
@@ -124,7 +197,12 @@ export const getAdminProducts = async (_req, res, next) => {
 
 export const createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.body)
+    const payload = normalizeProductPayload(req.body)
+    const validationError = validateProductPayload(payload)
+    if (validationError) {
+      return res.status(400).json({ success: false, message: validationError })
+    }
+    const product = await Product.create(payload)
     return res.status(201).json({ success: true, data: product })
   } catch (error) {
     return next(error)
@@ -133,7 +211,12 @@ export const createProduct = async (req, res, next) => {
 
 export const updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true }).lean()
+    const payload = normalizeProductPayload(req.body)
+    const validationError = validateProductPayload(payload)
+    if (validationError) {
+      return res.status(400).json({ success: false, message: validationError })
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, payload, { new: true }).lean()
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
     return res.json({ success: true, data: product })
   } catch (error) {

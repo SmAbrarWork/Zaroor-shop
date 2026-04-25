@@ -10,27 +10,28 @@ export const fetchCart = createAsyncThunk('cart/fetchCart', async (_, { rejectWi
   }
 })
 
-export const addToCartServer = createAsyncThunk('cart/addToCartServer', async ({ productId, quantity = 1 }, { rejectWithValue }) => {
+export const addToCartServer = createAsyncThunk('cart/addToCartServer', async ({ productId, quantity = 1, selectedOptions = {} }, { rejectWithValue }) => {
   try {
-    const { data } = await api.post('/cart', { productId, quantity })
+    const { data } = await api.post('/cart', { productId, quantity, selectedOptions })
     return data.data
   } catch (err) {
     return rejectWithValue(err.response?.data?.message ?? 'Failed to add to cart')
   }
 })
 
-export const updateCartItemServer = createAsyncThunk('cart/updateCartItemServer', async ({ productId, quantity }, { rejectWithValue }) => {
+export const updateCartItemServer = createAsyncThunk('cart/updateCartItemServer', async ({ productId, quantity, variantKey = '' }, { rejectWithValue }) => {
   try {
-    const { data } = await api.put(`/cart/${productId}`, { quantity })
+    const { data } = await api.put(`/cart/${productId}`, { quantity, variantKey })
     return data.data
   } catch (err) {
     return rejectWithValue(err.response?.data?.message ?? 'Failed to update cart')
   }
 })
 
-export const removeFromCartServer = createAsyncThunk('cart/removeFromCartServer', async (productId, { rejectWithValue }) => {
+export const removeFromCartServer = createAsyncThunk('cart/removeFromCartServer', async ({ productId, variantKey = '' }, { rejectWithValue }) => {
   try {
-    const { data } = await api.delete(`/cart/${productId}`)
+    const query = variantKey ? `?variantKey=${encodeURIComponent(variantKey)}` : ''
+    const { data } = await api.delete(`/cart/${productId}${query}`)
     return data.data
   } catch (err) {
     return rejectWithValue(err.response?.data?.message ?? 'Failed to remove from cart')
@@ -57,30 +58,45 @@ const initialState = {
 }
 
 const getItemId = (item) => item.product?._id || item.product?.id || item.product
+const normalizeSelectedOptions = (selectedOptions = {}) => ({
+  color: selectedOptions.color || '',
+  size: selectedOptions.size || '',
+  waistSize:
+    selectedOptions.waistSize === null || selectedOptions.waistSize === undefined || selectedOptions.waistSize === ''
+      ? null
+      : Number(selectedOptions.waistSize),
+})
+const getVariantKey = (selectedOptions = {}) => {
+  const normalized = normalizeSelectedOptions(selectedOptions)
+  return [normalized.color, normalized.size, normalized.waistSize ?? ''].join('|')
+}
+const getCartLineId = (item) => `${getItemId(item)}::${item.variantKey || getVariantKey(item.selectedOptions)}`
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
     addToCartLocal: (state, action) => {
-      const { product, quantity = 1 } = action.payload
+      const { product, quantity = 1, selectedOptions = {} } = action.payload
       const pid = product._id || product.id
-      const existing = state.items.find((i) => getItemId(i) === pid)
+      const normalizedOptions = normalizeSelectedOptions(selectedOptions)
+      const variantKey = getVariantKey(normalizedOptions)
+      const existing = state.items.find((i) => getItemId(i) === pid && (i.variantKey || getVariantKey(i.selectedOptions)) === variantKey)
       if (existing) {
         existing.quantity += quantity
       } else {
-        state.items.push({ product, quantity })
+        state.items.push({ product, quantity, selectedOptions: normalizedOptions, variantKey })
       }
       saveGuestCart(state.items)
     },
     updateQuantityLocal: (state, action) => {
-      const { productId, quantity } = action.payload
-      const item = state.items.find((i) => getItemId(i) === productId)
+      const { lineId, quantity } = action.payload
+      const item = state.items.find((i) => getCartLineId(i) === lineId)
       if (item) item.quantity = quantity
       saveGuestCart(state.items)
     },
     removeFromCartLocal: (state, action) => {
-      state.items = state.items.filter((i) => getItemId(i) !== action.payload)
+      state.items = state.items.filter((i) => getCartLineId(i) !== action.payload)
       saveGuestCart(state.items)
     },
     clearCartLocal: (state) => {

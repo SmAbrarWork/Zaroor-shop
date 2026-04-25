@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { DEFAULT_EVENT_SLUG, mockEvents } from '../../data/mockEvents'
 import { getActiveEventByDate } from '../../utils/dateUtils'
 import api from '../../utils/api'
 
@@ -12,14 +11,9 @@ export const fetchEvents = createAsyncThunk('event/fetchEvents', async (_, { rej
   }
 })
 
-const initialEvent = getActiveEventByDate(mockEvents)
-
 const initialState = {
-  events: mockEvents,
-  activeEvent:
-    mockEvents.find((event) => event.slug === initialEvent.slug) ??
-    mockEvents.find((event) => event.slug === DEFAULT_EVENT_SLUG) ??
-    mockEvents[0],
+  events: [],
+  activeEvent: null,
   loading: false,
 }
 
@@ -28,7 +22,7 @@ const eventSlice = createSlice({
   initialState,
   reducers: {
     detectEventByDate: (state) => {
-      state.activeEvent = getActiveEventByDate(state.events)
+      state.activeEvent = state.events.length > 0 ? getActiveEventByDate(state.events) : null
     },
     setActiveEventBySlug: (state, action) => {
       const selected = state.events.find((event) => event.slug === action.payload)
@@ -40,10 +34,8 @@ const eventSlice = createSlice({
       .addCase(fetchEvents.pending, (state) => { state.loading = true })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.loading = false
-        if (action.payload.length > 0) {
-          state.events = action.payload
-          state.activeEvent = getActiveEventByDate(action.payload)
-        }
+        state.events = action.payload
+        state.activeEvent = action.payload.length > 0 ? getActiveEventByDate(action.payload) : null
       })
       .addCase(fetchEvents.rejected, (state) => { state.loading = false })
   },

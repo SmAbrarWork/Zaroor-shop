@@ -37,6 +37,20 @@ export default function AdminLayout() {
       </header>
 
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6">
+        <nav className="fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around border-t border-white/10 bg-slate-900/95 px-2 py-2 md:hidden">
+          {navItems.map((item) => {
+            const active = location.pathname === item.to
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`rounded-md px-2 py-1 text-[11px] ${active ? 'text-white' : 'text-white/60'}`}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
         <nav className="hidden w-48 shrink-0 space-y-1 md:block">
           {navItems.map((item) => {
             const active = location.pathname === item.to
@@ -57,7 +71,7 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <main className="min-w-0 flex-1">
+        <main className="min-w-0 flex-1 pb-16 md:pb-0">
           <Outlet />
         </main>
       </div>

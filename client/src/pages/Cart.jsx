@@ -18,20 +18,34 @@ export default function Cart() {
   const total = useAppSelector(selectCartTotal)
   const count = useAppSelector(selectCartCount)
 
-  const handleUpdateQuantity = (productId, quantity) => {
+  const toLineId = (item) => {
+    const productId = item.product?._id || item.product?.id
+    const fallbackKey = [
+      item.selectedOptions?.color || '',
+      item.selectedOptions?.size || '',
+      item.selectedOptions?.waistSize ?? '',
+    ].join('|')
+    return `${productId}::${item.variantKey || fallbackKey}`
+  }
+
+  const handleUpdateQuantity = (item, quantity) => {
     if (quantity < 1) return
+    const productId = item.product?._id || item.product?.id
+    const variantKey = item.variantKey || ''
     if (isAuthenticated) {
-      dispatch(updateCartItemServer({ productId, quantity }))
+      dispatch(updateCartItemServer({ productId, quantity, variantKey }))
     } else {
-      dispatch(updateQuantityLocal({ productId, quantity }))
+      dispatch(updateQuantityLocal({ lineId: toLineId(item), quantity }))
     }
   }
 
-  const handleRemove = (productId) => {
+  const handleRemove = (item) => {
+    const productId = item.product?._id || item.product?.id
+    const variantKey = item.variantKey || ''
     if (isAuthenticated) {
-      dispatch(removeFromCartServer(productId))
+      dispatch(removeFromCartServer({ productId, variantKey }))
     } else {
-      dispatch(removeFromCartLocal(productId))
+      dispatch(removeFromCartLocal(toLineId(item)))
     }
   }
 
@@ -67,7 +81,8 @@ export default function Cart() {
             if (!product) return null
             return (
               <CartItem
-                key={product._id || product.id}
+                key={toLineId(item)}
+                item={item}
                 product={product}
                 quantity={item.quantity}
                 onUpdateQuantity={handleUpdateQuantity}

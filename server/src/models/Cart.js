@@ -4,8 +4,14 @@ const cartItemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1, default: 1 },
+    selectedOptions: {
+      color: { type: String, default: '' },
+      size: { type: String, default: '' },
+      waistSize: { type: Number, default: null },
+    },
+    variantKey: { type: String, default: '' },
   },
-  { _id: false }
+  { _id: true }
 )
 
 const cartSchema = new mongoose.Schema(

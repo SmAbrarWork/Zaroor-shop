@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react'
 import api from '../../utils/api'
 
-const emptyEvent = { name: '', slug: '', bannerText: '', story: '', startDate: '', endDate: '', countdownDate: '', theme: { primary: '#020617', accent: '#f59e0b', text: '#ffffff', surface: '#0f172a' } }
+const emptyEvent = {
+  name: '',
+  slug: '',
+  heroTitle: '',
+  heroSubtitle: '',
+  heroImage: '',
+  ctaLabel: 'Shop The Drop',
+  campaignFocus: 'Urgency. Emotion. Action.',
+  displayMode: 'text',
+  bannerText: '',
+  story: '',
+  startDate: '',
+  endDate: '',
+  countdownDate: '',
+  theme: { primary: '#020617', accent: '#f59e0b', text: '#ffffff', surface: '#0f172a' },
+}
 
 export default function AdminEvents() {
   const [events, setEvents] = useState([])
@@ -37,6 +52,12 @@ export default function AdminEvents() {
     setForm({
       name: event.name,
       slug: event.slug,
+      heroTitle: event.heroTitle || '',
+      heroSubtitle: event.heroSubtitle || '',
+      heroImage: event.heroImage || '',
+      ctaLabel: event.ctaLabel || 'Shop The Drop',
+      campaignFocus: event.campaignFocus || 'Urgency. Emotion. Action.',
+      displayMode: event.displayMode || 'text',
       bannerText: event.bannerText || '',
       story: event.story || '',
       startDate: event.startDate?.slice(0, 10) || '',
@@ -57,7 +78,7 @@ export default function AdminEvents() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold">Events ({events.length})</h2>
         <button
           onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyEvent) }}
@@ -68,21 +89,30 @@ export default function AdminEvents() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2 xl:grid-cols-3">
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+          <input value={form.heroTitle} onChange={(e) => setForm({ ...form, heroTitle: e.target.value })} placeholder="Hero title (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 xl:col-span-2" />
+          <input value={form.heroSubtitle} onChange={(e) => setForm({ ...form, heroSubtitle: e.target.value })} placeholder="Hero subtitle (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} placeholder="Hero image URL (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} placeholder="CTA label" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+          <input value={form.campaignFocus} onChange={(e) => setForm({ ...form, campaignFocus: e.target.value })} placeholder="Campaign focus" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2" />
+          <select value={form.displayMode} onChange={(e) => setForm({ ...form, displayMode: e.target.value })} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30">
+            <option value="text">Show Banner Text</option>
+            <option value="countdown">Show Countdown Timer</option>
+          </select>
           <input value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} type="date" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} type="date" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.countdownDate} onChange={(e) => setForm({ ...form, countdownDate: e.target.value })} type="datetime-local" placeholder="Countdown" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2" />
-          <input value={form.bannerText} onChange={(e) => setForm({ ...form, bannerText: e.target.value })} placeholder="Banner Text" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2" />
-          <textarea value={form.story} onChange={(e) => setForm({ ...form, story: e.target.value })} placeholder="Story" rows={2} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2" />
-          <div className="flex gap-2 sm:col-span-2">
+          <input value={form.countdownDate} onChange={(e) => setForm({ ...form, countdownDate: e.target.value })} type="datetime-local" placeholder="Countdown" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.bannerText} onChange={(e) => setForm({ ...form, bannerText: e.target.value })} placeholder="Banner Text" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <textarea value={form.story} onChange={(e) => setForm({ ...form, story: e.target.value })} placeholder="Story" rows={2} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <div className="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3">
             <label className="flex items-center gap-1 text-xs text-white/50">Primary<input type="color" value={form.theme.primary} onChange={(e) => setForm({ ...form, theme: { ...form.theme, primary: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
             <label className="flex items-center gap-1 text-xs text-white/50">Accent<input type="color" value={form.theme.accent} onChange={(e) => setForm({ ...form, theme: { ...form.theme, accent: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
             <label className="flex items-center gap-1 text-xs text-white/50">Text<input type="color" value={form.theme.text} onChange={(e) => setForm({ ...form, theme: { ...form.theme, text: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
             <label className="flex items-center gap-1 text-xs text-white/50">Surface<input type="color" value={form.theme.surface} onChange={(e) => setForm({ ...form, theme: { ...form.theme, surface: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
           </div>
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2">
+          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2 xl:col-span-3">
             {editing ? 'Update Event' : 'Create Event'}
           </button>
         </form>

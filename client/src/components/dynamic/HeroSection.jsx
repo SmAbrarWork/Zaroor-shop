@@ -11,7 +11,7 @@ export default function HeroSection({ event }) {
   }
 
   return (
-    <section className="grid items-end gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <section className="grid items-end gap-6 lg:grid-cols-[1.2fr_0.8fr] xl:gap-8">
       <div className="space-y-6">
         <Badge>Limited Drop</Badge>
         <MotionHeading
@@ -20,15 +20,15 @@ export default function HeroSection({ event }) {
           transition={{ duration: 0.4 }}
           className="text-4xl font-black uppercase leading-[0.9] tracking-tight sm:text-6xl lg:text-7xl"
         >
-          {event.name}
+          {event.heroTitle || event.name}
           <span className="mt-2 block text-[0.42em] font-semibold tracking-[0.14em] text-[var(--color-accent)]/95 sm:text-[0.36em]">
-            Built To Convert
+            {event.heroSubtitle || 'Built To Convert'}
           </span>
         </MotionHeading>
         <p className="max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base sm:text-white/85">
           {event.story}
         </p>
-        <Button onClick={scrollToProducts}>Shop The Drop</Button>
+        <Button onClick={scrollToProducts}>{event.ctaLabel || 'Shop The Drop'}</Button>
       </div>
       <MotionPanel
         initial={{ opacity: 0, x: 20 }}
@@ -36,10 +36,17 @@ export default function HeroSection({ event }) {
         transition={{ duration: 0.45 }}
         className="relative h-56 overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--color-surface)] sm:h-72"
       >
-        <div className="absolute -left-20 top-10 h-52 w-52 rounded-full bg-[var(--color-accent)]/30 blur-3xl" />
+        <div className="absolute inset-0">
+          {event.heroImage ? (
+            <img src={event.heroImage} alt={event.name} className="h-full w-full object-cover opacity-35" />
+          ) : (
+            <div className="absolute -left-20 top-10 h-52 w-52 rounded-full bg-[var(--color-accent)]/30 blur-3xl" />
+          )}
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
         <div className="absolute bottom-6 left-6 right-6">
           <p className="text-xs uppercase tracking-[0.3em] text-white/70">Campaign Focus</p>
-          <p className="mt-2 text-2xl font-bold">Urgency. Emotion. Action.</p>
+          <p className="mt-2 text-xl font-bold sm:text-2xl">{event.campaignFocus || 'Urgency. Emotion. Action.'}</p>
         </div>
       </MotionPanel>
     </section>

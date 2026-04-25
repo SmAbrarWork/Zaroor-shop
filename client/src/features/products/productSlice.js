@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { mockProducts } from '../../data/mockProducts'
 import api from '../../utils/api'
 
 export const fetchProducts = createAsyncThunk('products/fetchProducts', async (_, { rejectWithValue }) => {
@@ -12,8 +11,8 @@ export const fetchProducts = createAsyncThunk('products/fetchProducts', async (_
 })
 
 const initialState = {
-  items: mockProducts,
-  filteredItems: mockProducts,
+  items: [],
+  filteredItems: [],
   loading: false,
 }
 

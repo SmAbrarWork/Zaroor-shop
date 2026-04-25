@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import {
   selectActiveEvent,
@@ -11,6 +11,8 @@ import CartIcon from '../cart/CartIcon'
 
 export default function Navbar() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const events = useAppSelector(selectAllEvents)
   const activeEvent = useAppSelector(selectActiveEvent)
   const user = useAppSelector(selectUser)
@@ -20,15 +22,19 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Link to="/" className="shrink-0">
           <p className="text-[10px] uppercase tracking-[0.3em] text-white/50">ZA.pk Drops</p>
-          <h1 className="text-base font-bold leading-tight text-[var(--color-text)]">{activeEvent.name}</h1>
+          <h1 className="text-base font-bold leading-tight text-[var(--color-text)]">{activeEvent?.name || 'Loading...'}</h1>
         </Link>
 
         <div className="flex items-center gap-3">
           <div className="relative hidden sm:block">
             <select
               className="appearance-none rounded-full border border-white/20 bg-white/5 py-1.5 pl-3 pr-8 text-xs text-[var(--color-text)] transition-colors focus:border-white/40 focus:outline-none"
-              value={activeEvent.slug}
-              onChange={(e) => dispatch(setActiveEventBySlug(e.target.value))}
+              value={activeEvent?.slug || ''}
+              onChange={(e) => {
+                dispatch(setActiveEventBySlug(e.target.value))
+                if (location.pathname !== '/') navigate('/')
+              }}
+              disabled={!activeEvent}
             >
               {events.map((event) => (
                 <option key={event.slug} value={event.slug} className="bg-slate-900">

@@ -1,5 +1,20 @@
 import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
+import { Product } from '../models/Product.js'
+
+const normalizeSelectedOptions = (selectedOptions = {}) => ({
+  color: selectedOptions.color?.trim?.() ?? '',
+  size: selectedOptions.size?.trim?.() ?? '',
+  waistSize:
+    selectedOptions.waistSize === null || selectedOptions.waistSize === undefined || selectedOptions.waistSize === ''
+      ? null
+      : Number(selectedOptions.waistSize),
+})
+
+const buildVariantKey = (selectedOptions = {}) => {
+  const normalized = normalizeSelectedOptions(selectedOptions)
+  return [normalized.color, normalized.size, normalized.waistSize ?? ''].join('|')
+}
 
 export const createOrder = async (req, res, next) => {
   try {
@@ -13,11 +28,46 @@ export const createOrder = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Cart is empty' })
     }
 
+    const productDocs = await Product.find({
+      _id: { $in: cart.items.map((i) => i.product._id) },
+    })
+    const productMap = new Map(productDocs.map((p) => [p._id.toString(), p]))
+
+    for (const cartItem of cart.items) {
+      const productId = cartItem.product._id.toString()
+      const productDoc = productMap.get(productId)
+      if (!productDoc) {
+        return res.status(400).json({ success: false, message: `Product not found: ${productId}` })
+      }
+      const selectedOptions = normalizeSelectedOptions(cartItem.selectedOptions || {})
+      const variantKey = buildVariantKey(selectedOptions)
+      const variantIndex = (productDoc.variantStock || []).findIndex(
+        (entry) => buildVariantKey(entry) === variantKey
+      )
+      const availableStock = variantIndex >= 0
+        ? Number(productDoc.variantStock[variantIndex].stock) || 0
+        : Number(productDoc.stock) || 0
+
+      if (cartItem.quantity > availableStock) {
+        return res.status(400).json({
+          success: false,
+          message: `${productDoc.name} only has ${availableStock} item(s) available for selected variant`,
+        })
+      }
+
+      if (variantIndex >= 0) {
+        productDoc.variantStock[variantIndex].stock = availableStock - cartItem.quantity
+      } else {
+        productDoc.stock = availableStock - cartItem.quantity
+      }
+    }
+
     const items = cart.items.map((i) => ({
       product: i.product._id,
       name: i.product.name,
       price: i.product.price,
       quantity: i.quantity,
+      selectedOptions: i.selectedOptions || { color: '', size: '', waistSize: null },
     }))
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
@@ -27,6 +77,8 @@ export const createOrder = async (req, res, next) => {
       totalAmount,
       shippingAddress,
     })
+
+    await Promise.all([...productMap.values()].map((productDoc) => productDoc.save()))
 
     cart.items = []
     await cart.save()

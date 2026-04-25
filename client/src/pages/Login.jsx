@@ -44,7 +44,15 @@ export default function Login() {
       if (guestCart.length > 0) {
         const syncs = guestCart.map((item) => {
           const pid = item.product?._id || item.product?.id
-          if (pid) return dispatch(addToCartServer({ productId: pid, quantity: item.quantity }))
+          if (pid) {
+            return dispatch(
+              addToCartServer({
+                productId: pid,
+                quantity: item.quantity,
+                selectedOptions: item.selectedOptions || {},
+              })
+            )
+          }
           return null
         }).filter(Boolean)
         Promise.all(syncs).then(() => {
