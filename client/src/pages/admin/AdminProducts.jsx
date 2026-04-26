@@ -32,12 +32,14 @@ export default function AdminProducts() {
   const [form, setForm] = useState(emptyProduct)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [optionInput, setOptionInput] = useState({ colors: '', sizes: '', waistSizes: '' })
 
   const clearForm = () => {
     setForm(emptyProduct)
     setEditing(null)
     setError('')
+    setSuccess('')
     setOptionInput({ colors: '', sizes: '', waistSizes: '' })
   }
 
@@ -131,6 +133,7 @@ export default function AdminProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     const selectedEvent = events.find((ev) => ev._id === form.event)
     const tags = typeof form.tags === 'string'
       ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -186,6 +189,7 @@ export default function AdminProducts() {
       setShowForm(false)
       clearForm()
       fetchProducts()
+      setSuccess(editing ? 'Product updated successfully.' : 'Product created successfully.')
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save product')
     }
@@ -239,6 +243,11 @@ export default function AdminProducts() {
           {showForm ? 'Cancel' : '+ Add Product'}
         </button>
       </div>
+      {success && (
+        <p className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+          {success}
+        </p>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2 xl:grid-cols-3">

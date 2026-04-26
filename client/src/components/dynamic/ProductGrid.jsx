@@ -24,7 +24,11 @@ export default function ProductGrid({ products }) {
                 className="h-48 w-full rounded-2xl object-cover"
               />
               <div className="space-y-2 px-1">
-                <Badge>{product.tags[0]}</Badge>
+                <div className="flex flex-wrap gap-1">
+                  {(product.tags || []).map((tag) => (
+                    <Badge key={`${product._id || product.id}-${tag}`}>{tag}</Badge>
+                  ))}
+                </div>
                 <h3 className="text-lg font-bold leading-snug">{product.name}</h3>
                 <p className="line-clamp-2 text-xs text-white/60">{product.description}</p>
                 {product.discountedPrice ? (
