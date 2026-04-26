@@ -27,9 +27,15 @@ export default function ProductGrid({ products }) {
                 <Badge>{product.tags[0]}</Badge>
                 <h3 className="text-lg font-bold leading-snug">{product.name}</h3>
                 <p className="line-clamp-2 text-xs text-white/60">{product.description}</p>
-                <p className="text-base font-black text-[var(--color-accent)]">
-                  {formatCurrencyPKR(product.price)}
-                </p>
+                {product.discountedPrice ? (
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.discountedPrice)}</p>
+                    <p className="text-xs text-white/40 line-through">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">{product.discountPercent}% OFF</span>
+                  </div>
+                ) : (
+                  <p className="text-base font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
+                )}
               </div>
             </Link>
           </Card>

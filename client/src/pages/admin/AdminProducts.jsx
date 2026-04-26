@@ -7,7 +7,9 @@ const emptyProduct = {
   slug: '',
   event: '',
   productType: 'shirt',
-  price: '',
+  initialPrice: '',
+  discountedPrice: '',
+  discountPercent: '',
   image: '',
   description: '',
   tags: '',
@@ -149,7 +151,9 @@ export default function AdminProducts() {
       slug: form.slug,
       event: form.event || null,
       productType: form.productType,
-      price: Number(form.price),
+      initialPrice: Number(form.initialPrice),
+      discountedPrice: form.discountedPrice === '' ? null : Number(form.discountedPrice),
+      discountPercent: form.discountPercent === '' ? null : Number(form.discountPercent),
       stock: Number(form.stock),
       image: form.image,
       description: form.description,
@@ -194,8 +198,10 @@ export default function AdminProducts() {
       slug: product.slug,
       event: product.event?._id || '',
       productType: product.productType || 'shirt',
-      price: product.price,
       image: product.image,
+      initialPrice: product.initialPrice ?? product.price,
+      discountedPrice: product.discountedPrice ?? '',
+      discountPercent: product.discountPercent ?? '',
       description: product.description,
       tags: product.tags?.join(', ') || '',
       stock: product.stock,
@@ -250,7 +256,9 @@ export default function AdminProducts() {
             <option value="pants">Pants</option>
             <option value="other">Other</option>
           </select>
-          <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price (PKR)" type="number" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+          <input value={form.initialPrice} onChange={(e) => setForm({ ...form, initialPrice: e.target.value })} placeholder="Initial Price (PKR)" type="number" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+          <input value={form.discountedPrice} onChange={(e) => setForm({ ...form, discountedPrice: e.target.value })} placeholder="Discounted Price (optional)" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+          <input value={form.discountPercent} onChange={(e) => setForm({ ...form, discountPercent: e.target.value })} placeholder="Discount % (optional)" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Stock" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
           <div className="space-y-2 sm:col-span-2 xl:col-span-3">
@@ -342,7 +350,11 @@ export default function AdminProducts() {
                 <td className="px-4 py-2 font-medium">{p.name}</td>
                 <td className="px-4 py-2 text-xs text-white/60">{p.event?.name || '-'}</td>
                 <td className="px-4 py-2 text-xs uppercase text-white/60">{p.productType || 'other'}</td>
-                <td className="px-4 py-2">{formatCurrencyPKR(p.price)}</td>
+                <td className="px-4 py-2">
+                  {p.discountedPrice
+                    ? <span>{formatCurrencyPKR(p.discountedPrice)} <span className="text-xs text-emerald-300">({p.discountPercent}% OFF)</span></span>
+                    : formatCurrencyPKR(p.initialPrice || p.price)}
+                </td>
                 <td className="px-4 py-2">{p.stock}</td>
                 <td className="px-4 py-2 text-xs text-white/50">{(p.tags || []).join(', ')}</td>
                 <td className="flex gap-2 px-4 py-2">

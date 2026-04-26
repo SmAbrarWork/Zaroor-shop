@@ -38,15 +38,49 @@ const normalizeProductPayload = (payload = {}) => {
       }))
       .filter((entry) => Number.isFinite(entry.stock) && entry.stock >= 0 && (entry.waistSize === null || Number.isFinite(entry.waistSize)))
     : []
+  const initialPrice = payload.initialPrice === null || payload.initialPrice === undefined || payload.initialPrice === ''
+    ? Number(payload.price)
+    : Number(payload.initialPrice)
+  const discountedPrice = payload.discountedPrice === null || payload.discountedPrice === undefined || payload.discountedPrice === ''
+    ? null
+    : Number(payload.discountedPrice)
+  let discountPercent = payload.discountPercent === null || payload.discountPercent === undefined || payload.discountPercent === ''
+    ? null
+    : Number(payload.discountPercent)
+  const effectivePrice = Number.isFinite(discountedPrice) && discountedPrice > 0 ? discountedPrice : initialPrice
+  if (!Number.isFinite(discountedPrice) || discountedPrice <= 0) {
+    discountPercent = null
+  }
   return {
     ...payload,
     productType,
+    price: effectivePrice,
+    initialPrice,
+    discountedPrice,
+    discountPercent,
     options: { colors, sizes, waistSizes },
     variantStock,
   }
 }
 
 const validateProductPayload = (payload) => {
+  if (!Number.isFinite(payload.initialPrice) || payload.initialPrice <= 0) {
+    return 'Initial price must be greater than zero'
+  }
+  if (payload.discountedPrice !== null) {
+    if (!Number.isFinite(payload.discountedPrice) || payload.discountedPrice <= 0) {
+      return 'Discounted price must be greater than zero'
+    }
+    if (payload.discountedPrice >= payload.initialPrice) {
+      return 'Discounted price must be less than initial price'
+    }
+    if (payload.discountPercent === null || !Number.isFinite(payload.discountPercent)) {
+      return 'Discount percent is required when discounted price is set'
+    }
+    if (payload.discountPercent <= 0 || payload.discountPercent >= 100) {
+      return 'Discount percent must be between 1 and 99'
+    }
+  }
   if (payload.productType === 'shirt' && payload.options.sizes.length === 0) {
     return 'Shirt products require at least one size option'
   }

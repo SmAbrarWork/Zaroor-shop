@@ -128,9 +128,15 @@ export default function ProductDetails() {
             </div>
           </div>
         )}
-        <p className="text-2xl font-black text-[var(--color-accent)]">
-          {formatCurrencyPKR(product.price)}
-        </p>
+        {product.discountedPrice ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-2xl font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.discountedPrice)}</p>
+            <p className="text-sm text-white/40 line-through">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
+            <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-semibold text-emerald-300">{product.discountPercent}% OFF</span>
+          </div>
+        ) : (
+          <p className="text-2xl font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
+        )}
         <div className="flex flex-wrap gap-3">
           <Button onClick={handleAddToCart} disabled={requiresSelection}>
             Add to Cart
