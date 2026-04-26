@@ -6,10 +6,19 @@ import { formatCurrencyPKR } from '../../utils/dateUtils'
 
 export default function ProductGrid({ products }) {
   const MotionDiv = motion.div
+  const getDiscountPercent = (product) => {
+    if (product.discountPercent) return product.discountPercent
+    if (!product.initialPrice || !product.discountedPrice) return null
+    const percent = Math.round(((product.initialPrice - product.discountedPrice) / product.initialPrice) * 100)
+    return percent > 0 ? percent : null
+  }
 
   return (
     <section id="product-grid" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {products.map((product, index) => (
+        (() => {
+          const discountPercent = getDiscountPercent(product)
+          return (
         <MotionDiv
           key={product._id || product.id}
           initial={{ opacity: 0, y: 20 }}
@@ -31,11 +40,11 @@ export default function ProductGrid({ products }) {
                 </div>
                 <h3 className="text-lg font-bold leading-snug">{product.name}</h3>
                 <p className="line-clamp-2 text-xs text-white/60">{product.description}</p>
-                {product.discountedPrice ? (
+                {product.discountedPrice && discountPercent ? (
                   <div className="flex items-center gap-2">
                     <p className="text-base font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.discountedPrice)}</p>
                     <p className="text-xs text-white/40 line-through">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">{product.discountPercent}% OFF</span>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">{discountPercent}% OFF</span>
                   </div>
                 ) : (
                   <p className="text-base font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
@@ -44,6 +53,8 @@ export default function ProductGrid({ products }) {
             </Link>
           </Card>
         </MotionDiv>
+          )
+        })()
       ))}
     </section>
   )

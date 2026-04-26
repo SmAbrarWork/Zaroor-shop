@@ -49,6 +49,14 @@ export default function ProductDetails() {
     if (product) trackEvent('view_content', { productId: product._id || product.id })
   }, [product])
 
+  const discountPercent = useMemo(() => {
+    if (!product) return null
+    if (product.discountPercent) return product.discountPercent
+    if (!product.initialPrice || !product.discountedPrice) return null
+    const percent = Math.round(((product.initialPrice - product.discountedPrice) / product.initialPrice) * 100)
+    return percent > 0 ? percent : null
+  }, [product])
+
   const handleAddToCart = () => {
     if (!product) return
     trackEvent('add_to_cart', { productId: product._id || product.id })
@@ -128,11 +136,11 @@ export default function ProductDetails() {
             </div>
           </div>
         )}
-        {product.discountedPrice ? (
+        {product.discountedPrice && discountPercent ? (
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-2xl font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.discountedPrice)}</p>
             <p className="text-sm text-white/40 line-through">{formatCurrencyPKR(product.initialPrice || product.price)}</p>
-            <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-semibold text-emerald-300">{product.discountPercent}% OFF</span>
+            <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-semibold text-emerald-300">{discountPercent}% OFF</span>
           </div>
         ) : (
           <p className="text-2xl font-black text-[var(--color-accent)]">{formatCurrencyPKR(product.initialPrice || product.price)}</p>

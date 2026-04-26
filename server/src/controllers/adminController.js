@@ -44,13 +44,10 @@ const normalizeProductPayload = (payload = {}) => {
   const discountedPrice = payload.discountedPrice === null || payload.discountedPrice === undefined || payload.discountedPrice === ''
     ? null
     : Number(payload.discountedPrice)
-  let discountPercent = payload.discountPercent === null || payload.discountPercent === undefined || payload.discountPercent === ''
-    ? null
-    : Number(payload.discountPercent)
   const effectivePrice = Number.isFinite(discountedPrice) && discountedPrice > 0 ? discountedPrice : initialPrice
-  if (!Number.isFinite(discountedPrice) || discountedPrice <= 0) {
-    discountPercent = null
-  }
+  const discountPercent = Number.isFinite(discountedPrice) && discountedPrice > 0
+    ? Math.round(((initialPrice - discountedPrice) / initialPrice) * 100)
+    : null
   return {
     ...payload,
     productType,
@@ -74,11 +71,8 @@ const validateProductPayload = (payload) => {
     if (payload.discountedPrice >= payload.initialPrice) {
       return 'Discounted price must be less than initial price'
     }
-    if (payload.discountPercent === null || !Number.isFinite(payload.discountPercent)) {
-      return 'Discount percent is required when discounted price is set'
-    }
-    if (payload.discountPercent <= 0 || payload.discountPercent >= 100) {
-      return 'Discount percent must be between 1 and 99'
+    if (payload.discountPercent === null || payload.discountPercent <= 0 || payload.discountPercent >= 100) {
+      return 'Discount from prices must be between 1% and 99%'
     }
   }
   if (payload.productType === 'shirt' && payload.options.sizes.length === 0) {

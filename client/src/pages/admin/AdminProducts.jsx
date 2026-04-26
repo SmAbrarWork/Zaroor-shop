@@ -9,7 +9,6 @@ const emptyProduct = {
   productType: 'shirt',
   initialPrice: '',
   discountedPrice: '',
-  discountPercent: '',
   image: '',
   description: '',
   tags: '',
@@ -156,7 +155,6 @@ export default function AdminProducts() {
       productType: form.productType,
       initialPrice: Number(form.initialPrice),
       discountedPrice: form.discountedPrice === '' ? null : Number(form.discountedPrice),
-      discountPercent: form.discountPercent === '' ? null : Number(form.discountPercent),
       stock: Number(form.stock),
       image: form.image,
       description: form.description,
@@ -205,7 +203,6 @@ export default function AdminProducts() {
       image: product.image,
       initialPrice: product.initialPrice ?? product.price,
       discountedPrice: product.discountedPrice ?? '',
-      discountPercent: product.discountPercent ?? '',
       description: product.description,
       tags: product.tags?.join(', ') || '',
       stock: product.stock,
@@ -267,7 +264,6 @@ export default function AdminProducts() {
           </select>
           <input value={form.initialPrice} onChange={(e) => setForm({ ...form, initialPrice: e.target.value })} placeholder="Initial Price (PKR)" type="number" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.discountedPrice} onChange={(e) => setForm({ ...form, discountedPrice: e.target.value })} placeholder="Discounted Price (optional)" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.discountPercent} onChange={(e) => setForm({ ...form, discountPercent: e.target.value })} placeholder="Discount % (optional)" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Stock" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
           <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
           <div className="space-y-2 sm:col-span-2 xl:col-span-3">
