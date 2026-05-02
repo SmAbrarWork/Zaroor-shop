@@ -1,6 +1,14 @@
 import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
 import { Product } from '../models/Product.js'
+import { SHIPPING_DESTINATION_KEYS } from '../constants/shippingDestinations.js'
+
+const unitShippingForProduct = (productDoc, destinationKey) => {
+  const rates = productDoc.shippingRates || []
+  const row = rates.find((r) => r.destination === destinationKey)
+  if (!row) return 0
+  return Math.max(0, Number(row.cost) || 0)
+}
 
 const normalizeSelectedOptions = (selectedOptions = {}) => ({
   color: selectedOptions.color?.trim?.() ?? '',
@@ -16,11 +24,20 @@ const buildVariantKey = (selectedOptions = {}) => {
   return [normalized.color, normalized.size, normalized.waistSize ?? ''].join('|')
 }
 
+const PAYMENT_METHODS = ['jazzcash', 'easypaisa', 'cod']
+
 export const createOrder = async (req, res, next) => {
   try {
-    const { shippingAddress } = req.body
+    const { shippingAddress, paymentMethod, shippingDestination } = req.body
     if (!shippingAddress?.fullName || !shippingAddress?.phone || !shippingAddress?.address || !shippingAddress?.city) {
       return res.status(400).json({ success: false, message: 'Complete shipping address is required' })
+    }
+    const destKey = typeof shippingDestination === 'string' ? shippingDestination.toLowerCase().trim() : ''
+    if (!destKey || !SHIPPING_DESTINATION_KEYS.has(destKey)) {
+      return res.status(400).json({ success: false, message: 'Select a shipping destination / zone' })
+    }
+    if (!paymentMethod || !PAYMENT_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({ success: false, message: 'Choose a valid payment method (JazzCash, Easypaisa, or cash on delivery)' })
     }
 
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.product')
@@ -69,13 +86,24 @@ export const createOrder = async (req, res, next) => {
       quantity: i.quantity,
       selectedOptions: i.selectedOptions || { color: '', size: '', waistSize: null },
     }))
-    const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+    let shippingAmount = 0
+    for (const cartItem of cart.items) {
+      const productDoc = productMap.get(cartItem.product._id.toString())
+      if (!productDoc) continue
+      const perUnit = unitShippingForProduct(productDoc, destKey)
+      shippingAmount += perUnit * cartItem.quantity
+    }
+    const totalAmount = subtotal + shippingAmount
 
     const order = await Order.create({
       user: req.user._id,
       items,
       totalAmount,
       shippingAddress,
+      paymentMethod,
+      shippingDestination: destKey,
+      shippingAmount,
     })
 
     await Promise.all([...productMap.values()].map((productDoc) => productDoc.save()))

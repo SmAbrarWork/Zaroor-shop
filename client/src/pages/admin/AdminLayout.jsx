@@ -6,9 +6,10 @@ import { selectUser } from '../../features/auth/authSelectors'
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: '□' },
   { to: '/admin/users', label: 'Users', icon: '◉' },
+  { to: '/admin/events', label: 'Events', icon: '◈' },
+  { to: '/admin/categories', label: 'Categories', icon: '☰' },
   { to: '/admin/products', label: 'Products', icon: '◇' },
   { to: '/admin/orders', label: 'Orders', icon: '▤' },
-  { to: '/admin/events', label: 'Events', icon: '◈' },
 ]
 
 export default function AdminLayout() {
@@ -25,7 +26,7 @@ export default function AdminLayout() {
   if (!user || user.role !== 'admin') return null
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-950 text-white [color-scheme:dark]">
       <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">

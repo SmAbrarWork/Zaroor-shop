@@ -8,6 +8,12 @@ import {
   getAdminEvents, createEvent, updateEvent, deleteEvent,
   getAdminOrders, updateOrderStatus,
 } from '../controllers/adminController.js'
+import {
+  getAdminCategories,
+  createAdminCategory,
+  updateAdminCategory,
+  deleteAdminCategory,
+} from '../controllers/adminCategoryController.js'
 
 const router = Router()
 
@@ -24,6 +30,11 @@ router.get('/products', getAdminProducts)
 router.post('/products', createProduct)
 router.put('/products/:id', updateProduct)
 router.delete('/products/:id', deleteProduct)
+
+router.get('/categories', getAdminCategories)
+router.post('/categories', createAdminCategory)
+router.put('/categories/:id', updateAdminCategory)
+router.delete('/categories/:id', deleteAdminCategory)
 
 router.get('/events', getAdminEvents)
 router.post('/events', createEvent)

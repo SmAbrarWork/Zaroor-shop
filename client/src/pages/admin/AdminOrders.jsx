@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../utils/api'
+import { ADMIN_INPUT, ADMIN_SELECT } from '../../utils/adminClasses.js'
 import { formatCurrencyPKR } from '../../utils/dateUtils'
 
 const statusColor = (s) =>
@@ -50,12 +51,12 @@ export default function AdminOrders() {
             value={search}
             onChange={handleSearch}
             placeholder="Search name, email, phone, city..."
-            className="w-64 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-white/30"
+            className={`${ADMIN_INPUT} w-full max-w-xs`}
           />
           <select
             value={statusFilter}
             onChange={handleStatusFilter}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
+            className={`${ADMIN_SELECT} min-w-[140px]`}
           >
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
@@ -83,15 +84,15 @@ export default function AdminOrders() {
                 <th className="px-3 py-2">Total</th>
                 <th className="px-3 py-2">Ship To</th>
                 <th className="px-3 py-2">Phone</th>
+                <th className="px-3 py-2">Payment</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Date</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
-                <>
+                <Fragment key={order._id}>
                   <tr
-                    key={order._id}
                     className="cursor-pointer border-b border-white/5 hover:bg-white/5"
                     onClick={() => setExpanded(expanded === order._id ? null : order._id)}
                   >
@@ -119,11 +120,20 @@ export default function AdminOrders() {
                       {order.shippingAddress ? `${order.shippingAddress.fullName}, ${order.shippingAddress.city}` : '-'}
                     </td>
                     <td className="px-3 py-2 text-xs text-white/50">{order.shippingAddress?.phone ?? '-'}</td>
+                    <td className="px-3 py-2 text-xs font-semibold capitalize text-white/70">
+                      {order.paymentMethod === 'jazzcash'
+                        ? 'JazzCash'
+                        : order.paymentMethod === 'easypaisa'
+                          ? 'Easypaisa'
+                          : order.paymentMethod === 'cod'
+                            ? 'COD'
+                            : '—'}
+                    </td>
                     <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        className={`rounded-full px-2 py-0.5 text-xs ${statusColor(order.status)}`}
+                        className={`admin-select max-w-[130px] min-h-0 rounded-full border border-white/20 px-2 py-0.5 text-xs ${statusColor(order.status)}`}
                       >
                         <option value="pending">pending</option>
                         <option value="confirmed">confirmed</option>
@@ -136,10 +146,10 @@ export default function AdminOrders() {
                     </td>
                   </tr>
                   {expanded === order._id && (
-                    <tr key={`${order._id}-detail`} className="border-b border-white/5">
-                      <td colSpan={10} className="bg-white/[0.02] px-4 py-3">
+                    <tr className="border-b border-white/5">
+                      <td colSpan={11} className="bg-white/[0.02] px-4 py-3">
                         <div className="mb-2 text-xs text-white/40">
-                          Shipping: {order.shippingAddress?.fullName} | {order.shippingAddress?.address}, {order.shippingAddress?.city} | Phone: {order.shippingAddress?.phone}
+                          Payment: {order.paymentMethod === 'jazzcash' ? 'JazzCash' : order.paymentMethod === 'easypaisa' ? 'Easypaisa' : order.paymentMethod === 'cod' ? 'Cash on delivery' : '—'} · Ship zone: {order.shippingDestination || '—'} ({formatCurrencyPKR(order.shippingAmount || 0)}) · Address: {order.shippingAddress?.fullName} | {order.shippingAddress?.address}, {order.shippingAddress?.city} | Phone: {order.shippingAddress?.phone}
                         </div>
                         <table className="w-full text-xs">
                           <thead className="text-white/40">
@@ -164,7 +174,7 @@ export default function AdminOrders() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

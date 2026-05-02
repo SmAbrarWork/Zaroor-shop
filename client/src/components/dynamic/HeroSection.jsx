@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
+import SafeProductImage from '../ui/SafeProductImage'
 
 export default function HeroSection({ event }) {
   const MotionHeading = motion.h2
   const MotionPanel = motion.div
 
   const scrollToProducts = () => {
-    document.getElementById('product-grid')?.scrollIntoView({ behavior: 'smooth' })
+    const el = document.getElementById('shop-hot-drops') || document.getElementById('product-grid')
+    el?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -38,7 +40,11 @@ export default function HeroSection({ event }) {
       >
         <div className="absolute inset-0">
           {event.heroImage ? (
-            <img src={event.heroImage} alt={event.name} className="h-full w-full object-cover opacity-35" />
+            <SafeProductImage
+              src={event.heroImage}
+              alt={event.name}
+              imgClassName="h-full w-full object-cover opacity-35"
+            />
           ) : (
             <div className="absolute -left-20 top-10 h-52 w-52 rounded-full bg-[var(--color-accent)]/30 blur-3xl" />
           )}

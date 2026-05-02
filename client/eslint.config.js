@@ -24,6 +24,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      /* Too strict for normal data-fetch useEffects and keyed remount patterns (React 19 plugin). */
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

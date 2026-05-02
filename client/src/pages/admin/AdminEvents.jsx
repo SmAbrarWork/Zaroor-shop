@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import api from '../../utils/api'
+import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA } from '../../utils/adminClasses.js'
 
 const emptyEvent = {
   name: '',
@@ -36,15 +38,21 @@ export default function AdminEvents() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editing) {
-      await api.put(`/admin/events/${editing}`, form)
-    } else {
-      await api.post('/admin/events', form)
+    try {
+      if (editing) {
+        await api.put(`/admin/events/${editing}`, form)
+        toast.success('Event updated', { description: form.name })
+      } else {
+        await api.post('/admin/events', form)
+        toast.success('Event created', { description: form.name })
+      }
+      setShowForm(false)
+      setEditing(null)
+      setForm(emptyEvent)
+      fetchEvents()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not save event')
     }
-    setShowForm(false)
-    setEditing(null)
-    setForm(emptyEvent)
-    fetchEvents()
   }
 
   const handleEdit = (event) => {
@@ -70,8 +78,13 @@ export default function AdminEvents() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this event?')) return
-    await api.delete(`/admin/events/${id}`)
-    fetchEvents()
+    try {
+      await api.delete(`/admin/events/${id}`)
+      fetchEvents()
+      toast.success('Event removed')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not delete event')
+    }
   }
 
   if (loading) return <p className="text-sm text-white/50">Loading...</p>
@@ -89,23 +102,23 @@ export default function AdminEvents() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2 xl:grid-cols-3">
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.heroTitle} onChange={(e) => setForm({ ...form, heroTitle: e.target.value })} placeholder="Hero title (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 xl:col-span-2" />
-          <input value={form.heroSubtitle} onChange={(e) => setForm({ ...form, heroSubtitle: e.target.value })} placeholder="Hero subtitle (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
-          <input value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} placeholder="Hero image URL (optional)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
-          <input value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} placeholder="CTA label" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.campaignFocus} onChange={(e) => setForm({ ...form, campaignFocus: e.target.value })} placeholder="Campaign focus" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2" />
-          <select value={form.displayMode} onChange={(e) => setForm({ ...form, displayMode: e.target.value })} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30">
+        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/15 bg-slate-900/40 p-4 sm:grid-cols-2 xl:grid-cols-3">
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required className={ADMIN_INPUT} />
+          <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required className={ADMIN_INPUT} />
+          <input value={form.heroTitle} onChange={(e) => setForm({ ...form, heroTitle: e.target.value })} placeholder="Hero title (optional)" className={`${ADMIN_INPUT} xl:col-span-2`} />
+          <input value={form.heroSubtitle} onChange={(e) => setForm({ ...form, heroSubtitle: e.target.value })} placeholder="Hero subtitle (optional)" className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
+          <input value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} placeholder="Hero image URL (optional)" className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
+          <input value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} placeholder="CTA label" className={ADMIN_INPUT} />
+          <input value={form.campaignFocus} onChange={(e) => setForm({ ...form, campaignFocus: e.target.value })} placeholder="Campaign focus" className={`${ADMIN_INPUT} sm:col-span-2`} />
+          <select value={form.displayMode} onChange={(e) => setForm({ ...form, displayMode: e.target.value })} className={`${ADMIN_SELECT} w-full`}>
             <option value="text">Show Banner Text</option>
             <option value="countdown">Show Countdown Timer</option>
           </select>
-          <input value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} type="date" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} type="date" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.countdownDate} onChange={(e) => setForm({ ...form, countdownDate: e.target.value })} type="datetime-local" placeholder="Countdown" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
-          <input value={form.bannerText} onChange={(e) => setForm({ ...form, bannerText: e.target.value })} placeholder="Banner Text" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
-          <textarea value={form.story} onChange={(e) => setForm({ ...form, story: e.target.value })} placeholder="Story" rows={2} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} type="date" required className={ADMIN_INPUT} />
+          <input value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} type="date" required className={ADMIN_INPUT} />
+          <input value={form.countdownDate} onChange={(e) => setForm({ ...form, countdownDate: e.target.value })} type="datetime-local" placeholder="Countdown" className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
+          <input value={form.bannerText} onChange={(e) => setForm({ ...form, bannerText: e.target.value })} placeholder="Banner Text" className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
+          <textarea value={form.story} onChange={(e) => setForm({ ...form, story: e.target.value })} placeholder="Story" rows={2} className={`${ADMIN_TEXTAREA} sm:col-span-2 xl:col-span-3`} />
           <div className="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3">
             <label className="flex items-center gap-1 text-xs text-white/50">Primary<input type="color" value={form.theme.primary} onChange={(e) => setForm({ ...form, theme: { ...form.theme, primary: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
             <label className="flex items-center gap-1 text-xs text-white/50">Accent<input type="color" value={form.theme.accent} onChange={(e) => setForm({ ...form, theme: { ...form.theme, accent: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>

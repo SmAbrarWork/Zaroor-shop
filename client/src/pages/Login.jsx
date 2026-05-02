@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { login, register, loadUser, clearError, setToken } from '../features/auth/authSlice'
@@ -23,7 +24,17 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const from = location.state?.from || '/'
+  const rawFrom = location.state?.from
+  const fromPath =
+    typeof rawFrom === 'string'
+      ? rawFrom
+      : rawFrom && typeof rawFrom === 'object' && typeof rawFrom.pathname === 'string'
+        ? rawFrom.pathname
+        : '/'
+
+  const resumeCheckout = fromPath === '/checkout'
+  const resumeOrderView =
+    typeof fromPath === 'string' && fromPath.startsWith('/order/')
 
   // Handle Google OAuth callback token
   useEffect(() => {
@@ -33,12 +44,22 @@ export default function Login() {
       dispatch(loadUser())
     }
     const err = searchParams.get('error')
-    if (err) dispatch(clearError())
+    if (err) {
+      dispatch(clearError())
+      toast.error('Google sign-in did not complete', { description: 'Try again or use email.' })
+    }
   }, [searchParams, dispatch])
 
   // Redirect after auth + sync guest cart
   useEffect(() => {
     if (isAuthenticated && user) {
+      const dest =
+        fromPath && fromPath !== '/'
+          ? fromPath
+          : user.role === 'admin'
+            ? '/admin'
+            : '/'
+
       // Sync guest cart to server
       const guestCart = JSON.parse(localStorage.getItem('guest_cart') || '[]')
       if (guestCart.length > 0) {
@@ -63,20 +84,30 @@ export default function Login() {
         dispatch(fetchCart())
       }
 
-      navigate(user.role === 'admin' ? '/admin' : from, { replace: true })
+      navigate(dest, { replace: true })
     }
-  }, [isAuthenticated, user, navigate, from, dispatch])
+  }, [isAuthenticated, user, navigate, fromPath, dispatch])
 
   useEffect(() => {
     return () => dispatch(clearError())
   }, [dispatch])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (mode === 'login') {
-      dispatch(login({ email, password }))
+      const result = await dispatch(login({ email, password }))
+      if (login.rejected.match(result)) {
+        toast.error(result.payload || 'Sign in failed')
+      } else {
+        toast.success('Welcome back', { description: 'Syncing your bag…' })
+      }
     } else {
-      dispatch(register({ name, email, password }))
+      const result = await dispatch(register({ name, email, password }))
+      if (register.rejected.match(result)) {
+        toast.error(result.payload || 'Could not create account')
+      } else {
+        toast.success('Account created', { description: "You're in — happy shopping." })
+      }
     }
   }
 
@@ -108,13 +139,27 @@ export default function Login() {
       </div>
 
       <div className="text-center">
-        <h2 className="text-3xl font-black">
+        <h2 className="text-2xl font-black sm:text-3xl">
           {mode === 'login' ? 'Welcome Back' : 'Join the Drop'}
         </h2>
         <p className="mt-1 text-sm text-white/60">
-          {mode === 'login' ? 'Sign in to your account' : 'Create your account to start shopping'}
+          {resumeCheckout
+            ? 'Sign in or create an account to finish checkout — shipping, and payment (cash on delivery, JazzCash, or Easypaisa).'
+            : resumeOrderView
+              ? 'Sign in to view your order confirmation.'
+              : mode === 'login'
+                ? 'Sign in to your account'
+                : 'Create your account to start shopping'}
         </p>
       </div>
+
+      {(resumeCheckout || resumeOrderView) && (
+        <div className="rounded-xl border border-[var(--color-accent)]/25 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] px-4 py-3 text-center text-xs text-white/75 sm:text-sm">
+          {resumeCheckout
+            ? "You'll continue to checkout after signing in."
+            : "You'll return to your order after signing in."}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

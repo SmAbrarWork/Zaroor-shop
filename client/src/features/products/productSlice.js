@@ -22,7 +22,14 @@ const productSlice = createSlice({
   reducers: {
     filterProductsByEvent: (state, action) => {
       const activeSlug = action.payload
-      state.filteredItems = state.items.filter((item) => item.tags.includes(activeSlug))
+      if (!activeSlug) {
+        state.filteredItems = state.items
+        return
+      }
+      state.filteredItems = state.items.filter((item) => {
+        const slug = item.event?.slug
+        return slug === activeSlug
+      })
     },
   },
   extraReducers: (builder) => {
@@ -30,10 +37,10 @@ const productSlice = createSlice({
       .addCase(fetchProducts.pending, (state) => { state.loading = true })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false
-        if (action.payload.length > 0) {
-          state.items = action.payload
-          state.filteredItems = action.payload
-        }
+        const payload = action.payload ?? []
+        state.items = payload
+        /* Full catalog; MainLayout syncs filteredItems to the active campaign */
+        state.filteredItems = payload
       })
       .addCase(fetchProducts.rejected, (state) => { state.loading = false })
   },

@@ -1,26 +1,23 @@
 import { useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { Link } from 'react-router-dom'
+import { useAppSelector } from '../app/hooks'
 import { selectActiveEvent } from '../features/event/eventSelectors'
-import { filterProductsByEvent } from '../features/products/productSlice'
-import { selectFilteredProducts } from '../features/products/productSelectors'
-import { applyEventTheme } from '../utils/themeEngine'
+import { selectHotDropProducts } from '../features/products/productSelectors'
 import HeroSection from '../components/dynamic/HeroSection'
 import EventBanner from '../components/dynamic/EventBanner'
 import CountdownTimer from '../components/dynamic/CountdownTimer'
 import ProductGrid from '../components/dynamic/ProductGrid'
+import CatalogCtaLink from '../components/ui/CatalogCtaLink'
 import { trackEvent } from '../utils/tracking'
 
 export default function Home() {
-  const dispatch = useAppDispatch()
   const activeEvent = useAppSelector(selectActiveEvent)
-  const filteredProducts = useAppSelector(selectFilteredProducts)
+  const hotDrops = useAppSelector(selectHotDropProducts)
 
   useEffect(() => {
     if (!activeEvent) return
-    applyEventTheme(activeEvent.theme)
-    dispatch(filterProductsByEvent(activeEvent.slug))
     trackEvent('campaign_view', { eventSlug: activeEvent.slug })
-  }, [activeEvent, dispatch])
+  }, [activeEvent])
 
   if (!activeEvent) {
     return (
@@ -30,13 +27,47 @@ export default function Home() {
     )
   }
 
+  const showHot = hotDrops.length > 0
+
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-10 pb-10">
       <HeroSection event={activeEvent} />
-      {activeEvent.displayMode === 'countdown' && activeEvent.countdownDate
-        ? <CountdownTimer key={activeEvent.countdownDate} targetDate={activeEvent.countdownDate} />
-        : <EventBanner text={activeEvent.bannerText} />}
-      <ProductGrid products={filteredProducts} />
+      {activeEvent.displayMode === 'countdown' && activeEvent.countdownDate ? (
+        <CountdownTimer key={activeEvent.countdownDate} targetDate={activeEvent.countdownDate} />
+      ) : (
+        <EventBanner text={activeEvent.bannerText} />
+      )}
+
+      <section id="shop-hot-drops" className="space-y-4 scroll-mt-24" aria-labelledby="hot-drops-heading">
+        <div className="flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h2 id="hot-drops-heading" className="text-xl font-black tracking-tight text-[var(--color-text)] sm:text-2xl">
+              Hot drops
+            </h2>
+            <p className="mt-1 text-sm text-white/55">
+              <strong className="font-bold text-white/90">Hand-picked highlights</strong> for this campaign. Use the{' '}
+              <strong className="font-bold text-white/90">category</strong> chips above to jump to a section, or use{' '}
+              <strong className="font-bold text-white/90">Full catalog</strong> in the bar to see every product.
+            </p>
+          </div>
+          <CatalogCtaLink className="shrink-0 self-start sm:self-center">
+            Browse full catalog
+          </CatalogCtaLink>
+        </div>
+
+        {showHot ? (
+          <ProductGrid products={hotDrops} layout="strip" />
+        ) : (
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-12 text-center">
+            <p className="text-sm text-white/55">
+              No hot drops yet for this campaign. Open <strong className="text-white/80">Full catalog</strong> in the menu above, or check back after the team publishes featured picks.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <CatalogCtaLink>Open full catalog</CatalogCtaLink>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

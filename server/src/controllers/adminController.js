@@ -3,6 +3,8 @@ import { Product } from '../models/Product.js'
 import { Order } from '../models/Order.js'
 import { Event } from '../models/Event.js'
 import { Cart } from '../models/Cart.js'
+import { Category } from '../models/Category.js'
+import { SHIPPING_DESTINATION_KEYS } from '../constants/shippingDestinations.js'
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const PRODUCT_TYPES = ['shirt', 'pants', 'other']
@@ -20,6 +22,20 @@ const normalizeNumberArray = (arr) =>
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value))
     : []
+
+const normalizeShippingRates = (raw) => {
+  if (!raw) return []
+  const arr = Array.isArray(raw) ? raw : []
+  const byDest = new Map()
+  for (const row of arr) {
+    const dest = `${row?.destination ?? ''}`.toLowerCase().trim()
+    if (!SHIPPING_DESTINATION_KEYS.has(dest)) continue
+    const cost = Number(row?.cost)
+    if (!Number.isFinite(cost) || cost < 0) continue
+    byDest.set(dest, { destination: dest, cost: Math.round(cost) })
+  }
+  return [...byDest.values()]
+}
 
 const normalizeProductPayload = (payload = {}) => {
   const productType = PRODUCT_TYPES.includes(payload.productType) ? payload.productType : 'other'
@@ -48,6 +64,9 @@ const normalizeProductPayload = (payload = {}) => {
   const discountPercent = Number.isFinite(discountedPrice) && discountedPrice > 0
     ? Math.round(((initialPrice - discountedPrice) / initialPrice) * 100)
     : null
+  const catRaw = payload.category
+  const category =
+    catRaw === '' || catRaw === null || catRaw === undefined ? null : catRaw
   return {
     ...payload,
     productType,
@@ -57,7 +76,24 @@ const normalizeProductPayload = (payload = {}) => {
     discountPercent,
     options: { colors, sizes, waistSizes },
     variantStock,
+    shippingRates: normalizeShippingRates(payload.shippingRates),
+    category,
+    isHotDrop: Boolean(payload.isHotDrop),
+    hotDropOrder: Number.isFinite(Number(payload.hotDropOrder)) ? Number(payload.hotDropOrder) : 0,
   }
+}
+
+const validateCategoryMatchesEvent = async (categoryId, eventId) => {
+  if (!categoryId) return null
+  if (!eventId) {
+    return 'Assign an event before choosing a category'
+  }
+  const cat = await Category.findById(categoryId).lean()
+  if (!cat) return 'Invalid category'
+  if (cat.event.toString() !== eventId.toString()) {
+    return 'Category does not belong to this product’s event'
+  }
+  return null
 }
 
 const validateProductPayload = (payload) => {
@@ -216,7 +252,11 @@ export const deleteUser = async (req, res, next) => {
 // --- Products ---
 export const getAdminProducts = async (_req, res, next) => {
   try {
-    const products = await Product.find().populate('event', 'name slug').sort({ createdAt: -1 }).lean()
+    const products = await Product.find()
+      .populate('event', 'name slug')
+      .populate('category', 'name slug sortOrder')
+      .sort({ createdAt: -1 })
+      .lean()
     return res.json({ success: true, data: products })
   } catch (error) {
     return next(error)
@@ -230,6 +270,10 @@ export const createProduct = async (req, res, next) => {
     if (validationError) {
       return res.status(400).json({ success: false, message: validationError })
     }
+    const catErr = await validateCategoryMatchesEvent(payload.category, payload.event)
+    if (catErr) {
+      return res.status(400).json({ success: false, message: catErr })
+    }
     const product = await Product.create(payload)
     return res.status(201).json({ success: true, data: product })
   } catch (error) {
@@ -239,13 +283,22 @@ export const createProduct = async (req, res, next) => {
 
 export const updateProduct = async (req, res, next) => {
   try {
+    const existing = await Product.findById(req.params.id).lean()
+    if (!existing) return res.status(404).json({ success: false, message: 'Product not found' })
+
     const payload = normalizeProductPayload(req.body)
     const validationError = validateProductPayload(payload)
     if (validationError) {
       return res.status(400).json({ success: false, message: validationError })
     }
-    const product = await Product.findByIdAndUpdate(req.params.id, payload, { new: true }).lean()
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' })
+    const eventId = payload.event ?? existing.event
+    const catErr = await validateCategoryMatchesEvent(payload.category, eventId)
+    if (catErr) {
+      return res.status(400).json({ success: false, message: catErr })
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, payload, { new: true })
+      .populate('category', 'name slug sortOrder')
+      .lean()
     return res.json({ success: true, data: product })
   } catch (error) {
     return next(error)

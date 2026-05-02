@@ -11,6 +11,7 @@ import productRoutes from './routes/productRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
 import { buildTrackingRoutes } from './routes/trackingRoutes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { TrackingService } from './services/trackingService.js'
@@ -57,6 +58,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 app.use('/api/events', eventRoutes)
 app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/categories', categoryRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)

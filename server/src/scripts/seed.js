@@ -1,8 +1,35 @@
 import mongoose from 'mongoose'
 import { env } from '../config/environment.js'
 import { Event } from '../models/Event.js'
+import { Category } from '../models/Category.js'
 import { Product } from '../models/Product.js'
 import { User } from '../models/User.js'
+import { SHIPPING_DESTINATIONS } from '../constants/shippingDestinations.js'
+
+/**
+ * Demo PKR per item × zone — clearly different by destination so checkout totals change visibly.
+ * Anime merch adds a flat bump vs Azadi. Product index staggers rows so products don’t all match.
+ */
+const DESTINATION_DEMO_PKR = {
+  karachi: 149,
+  lahore: 219,
+  islamabad: 249,
+  rawalpindi: 239,
+  faisalabad: 259,
+  multan: 279,
+  peshawar: 319,
+  quetta: 379,
+  other: 459,
+}
+
+function defaultShippingRates(productIndex, eventSlug) {
+  const eventBump = eventSlug === 'anime-merch' ? 45 : 0
+  const stagger = (productIndex % 6) * 35
+  return SHIPPING_DESTINATIONS.map((d) => ({
+    destination: d.key,
+    cost: DESTINATION_DEMO_PKR[d.key] + eventBump + stagger,
+  }))
+}
 
 const mongoUri = env.mongoUri
 
@@ -41,8 +68,92 @@ const events = [
   },
 ]
 
-const products = [
+/** Categories per event (scoped — never shared across campaigns). */
+const categoryDefs = [
   {
+    eventSlug: 'azadi-day',
+    slug: 'featured-graphics',
+    name: 'Featured graphics',
+    description: 'Statement tees and prints for the national drop.',
+    sortOrder: 1,
+  },
+  {
+    eventSlug: 'azadi-day',
+    slug: 'bottoms-cargo',
+    name: 'Bottoms & cargo',
+    description: 'Cargos, joggers, and parade-ready fits.',
+    sortOrder: 2,
+  },
+  {
+    eventSlug: 'azadi-day',
+    slug: 'street-layers',
+    name: 'Street layers',
+    description: 'Oversized fits and layered looks.',
+    sortOrder: 3,
+  },
+  {
+    eventSlug: 'azadi-day',
+    slug: 'heritage-tees',
+    name: 'Heritage tees',
+    description: 'Classic cuts with patriotic palette.',
+    sortOrder: 4,
+  },
+  {
+    eventSlug: 'anime-merch',
+    slug: 'hero-tees',
+    name: 'Hero tees',
+    description: 'Character-forward tops and collab prints.',
+    sortOrder: 1,
+  },
+  {
+    eventSlug: 'anime-merch',
+    slug: 'street-bottoms',
+    name: 'Street bottoms',
+    description: 'Tech fleece, joggers, and manga-panel pants.',
+    sortOrder: 2,
+  },
+  {
+    eventSlug: 'anime-merch',
+    slug: 'night-market',
+    name: 'Night market',
+    description: 'Neon drops and limited colourways.',
+    sortOrder: 3,
+  },
+  {
+    eventSlug: 'anime-merch',
+    slug: 'studio-collectors',
+    name: 'Studio collectors',
+    description: 'Premium pieces for shelf-worthy fits.',
+    sortOrder: 4,
+  },
+]
+
+/** Curated Unsplash IDs that resolve reliably for demos (avoids broken hotlinks). */
+const U = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=82`
+const IMG = {
+  tee1: U('photo-1521572163474-6864f9cf17ab'),
+  tee2: U('photo-1434389677669-e08b4cac3105'),
+  tee3: U('photo-1445205170230-053b83016050'),
+  pants1: U('photo-1473966968600-fa801b869a1a'),
+  pants2: U('photo-1542272604-787c3835535d'),
+  anime1: U('photo-1512436991641-6745cdb1723f'),
+  anime2: U('photo-1490481651871-ab68de25d43d'),
+  anime3: U('photo-1479064553897-e691316fa91f'),
+  street: U('photo-1593032465171-8bd2f72ac8c0'),
+  urban: U('photo-1560769629-975ec94e6a86'),
+}
+
+/**
+ * Product templates: eventSlug, categorySlug (null = uncategorized), isHotDrop, hotDropOrder
+ * Slugs must be globally unique.
+ */
+const productDefs = [
+  // —— Azadi: hot drops (appear in strip; also assigned to categories for testing overlap — storefront hides them from category rows)
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'featured-graphics',
+    isHotDrop: true,
+    hotDropOrder: 0,
     name: 'Azadi Flag Oversized Shirt',
     slug: 'azadi-flag-oversized-shirt',
     productType: 'shirt',
@@ -50,15 +161,11 @@ const products = [
     initialPrice: 3490,
     discountedPrice: 2590,
     discountPercent: 26,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
+    image: IMG.tee1,
     tags: ['azadi-day'],
     stock: 50,
     description: 'Heavy cotton shirt with crescent-star and bold Pakistan green print.',
-    options: {
-      colors: ['Green', 'White', 'Black'],
-      sizes: ['Small', 'Medium', 'Large'],
-      waistSizes: [],
-    },
+    options: { colors: ['Green', 'White', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
     variantStock: [
       { color: 'Green', size: 'Small', waistSize: null, stock: 8 },
       { color: 'Green', size: 'Medium', waistSize: null, stock: 10 },
@@ -68,6 +175,10 @@ const products = [
     ],
   },
   {
+    eventSlug: 'azadi-day',
+    categorySlug: 'bottoms-cargo',
+    isHotDrop: true,
+    hotDropOrder: 1,
     name: 'Pakistan Pride Cargo Pants',
     slug: 'pakistan-pride-cargo-pants',
     productType: 'pants',
@@ -75,15 +186,11 @@ const products = [
     initialPrice: 2290,
     discountedPrice: 1890,
     discountPercent: 17,
-    image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=1200&q=80',
+    image: IMG.pants1,
     tags: ['azadi-day'],
     stock: 70,
     description: 'Street cargo pants inspired by Azadi shades and victory green style.',
-    options: {
-      colors: ['Deep Green', 'Emerald', 'White'],
-      sizes: [],
-      waistSizes: [30, 32, 34, 36],
-    },
+    options: { colors: ['Deep Green', 'Emerald', 'White'], sizes: [], waistSizes: [30, 32, 34, 36] },
     variantStock: [
       { color: 'Deep Green', size: '', waistSize: 30, stock: 10 },
       { color: 'Deep Green', size: '', waistSize: 32, stock: 8 },
@@ -92,6 +199,226 @@ const products = [
     ],
   },
   {
+    eventSlug: 'azadi-day',
+    categorySlug: 'street-layers',
+    isHotDrop: true,
+    hotDropOrder: 2,
+    name: 'Crescent Boxy Tee',
+    slug: 'azadi-crescent-boxy-tee',
+    productType: 'shirt',
+    price: 2290,
+    initialPrice: 2790,
+    discountedPrice: 2290,
+    discountPercent: 18,
+    image: IMG.tee2,
+    tags: ['azadi-day'],
+    stock: 40,
+    description: 'Dropped shoulders and oversized silhouette with lunar embroidery.',
+    options: { colors: ['Forest', 'Bone'], sizes: ['Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Forest', size: 'Medium', waistSize: null, stock: 8 },
+      { color: 'Forest', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Bone', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Bone', size: 'X-Large', waistSize: null, stock: 6 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'heritage-tees',
+    isHotDrop: true,
+    hotDropOrder: 3,
+    name: 'Minar-e-Pakistan Graphic',
+    slug: 'azadi-minar-graphic-tee',
+    productType: 'shirt',
+    price: 2690,
+    initialPrice: 2690,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.tee3,
+    tags: ['azadi-day'],
+    stock: 35,
+    description: 'Monochrome monument graphic with Urdu calligraphy.',
+    options: { colors: ['Black', 'Sand'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Black', size: 'Small', waistSize: null, stock: 6 },
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Sand', size: 'Medium', waistSize: null, stock: 9 },
+      { color: 'Sand', size: 'Large', waistSize: null, stock: 10 },
+    ],
+  },
+  // —— Azadi: category-only (not hot)
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'featured-graphics',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Star & Crescent Pocket Tee',
+    slug: 'azadi-star-crescent-pocket-tee',
+    productType: 'shirt',
+    price: 1990,
+    initialPrice: 2490,
+    discountedPrice: 1990,
+    discountPercent: 20,
+    image: IMG.tee2,
+    tags: ['azadi-day'],
+    stock: 45,
+    description: 'Minimal chest pocket with metallic star hit.',
+    options: { colors: ['White', 'Olive'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'White', size: 'Small', waistSize: null, stock: 8 },
+      { color: 'White', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Olive', size: 'Medium', waistSize: null, stock: 9 },
+      { color: 'Olive', size: 'Large', waistSize: null, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'featured-graphics',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Quaid Striped Longline',
+    slug: 'azadi-quaid-striped-longline',
+    productType: 'shirt',
+    price: 2390,
+    initialPrice: 2390,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.tee1,
+    tags: ['azadi-day'],
+    stock: 30,
+    description: 'Vertical stripes with vintage collar detail.',
+    options: { colors: ['Navy', 'Cream'], sizes: ['Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Navy', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Navy', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Cream', size: 'Medium', waistSize: null, stock: 5 },
+      { color: 'Cream', size: 'Large', waistSize: null, stock: 5 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'bottoms-cargo',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Victory Green Joggers',
+    slug: 'azadi-victory-green-joggers',
+    productType: 'pants',
+    price: 2190,
+    initialPrice: 2590,
+    discountedPrice: 2190,
+    discountPercent: 15,
+    image: IMG.pants2,
+    tags: ['azadi-day'],
+    stock: 55,
+    description: 'Tapered joggers with zip pockets and subtle flag tab.',
+    options: { colors: ['Green', 'Charcoal'], sizes: [], waistSizes: [30, 32, 34] },
+    variantStock: [
+      { color: 'Green', size: '', waistSize: 30, stock: 10 },
+      { color: 'Green', size: '', waistSize: 32, stock: 12 },
+      { color: 'Charcoal', size: '', waistSize: 32, stock: 10 },
+      { color: 'Charcoal', size: '', waistSize: 34, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'bottoms-cargo',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Parade Slim Cargo',
+    slug: 'azadi-parade-slim-cargo',
+    productType: 'pants',
+    price: 2090,
+    initialPrice: 2090,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.urban,
+    tags: ['azadi-day'],
+    stock: 48,
+    description: 'Slim cargo with articulated knees for all-day wear.',
+    options: { colors: ['Khaki', 'Black'], sizes: [], waistSizes: [30, 32, 34, 36] },
+    variantStock: [
+      { color: 'Khaki', size: '', waistSize: 30, stock: 8 },
+      { color: 'Khaki', size: '', waistSize: 32, stock: 10 },
+      { color: 'Black', size: '', waistSize: 34, stock: 10 },
+      { color: 'Black', size: '', waistSize: 36, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'street-layers',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Monsoon Windbreaker Layer',
+    slug: 'azadi-monsoon-windbreaker-layer',
+    productType: 'shirt',
+    price: 2790,
+    initialPrice: 3290,
+    discountedPrice: 2790,
+    discountPercent: 15,
+    image: IMG.tee3,
+    tags: ['azadi-day'],
+    stock: 28,
+    description: 'Light layer styled as an oversized shirt-jacket.',
+    options: { colors: ['Slate', 'Olive'], sizes: ['Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Slate', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Slate', size: 'X-Large', waistSize: null, stock: 8 },
+      { color: 'Olive', size: 'Large', waistSize: null, stock: 6 },
+      { color: 'Olive', size: 'X-Large', waistSize: null, stock: 4 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'heritage-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Lahore Script Heritage',
+    slug: 'azadi-lahore-script-heritage',
+    productType: 'shirt',
+    price: 1890,
+    initialPrice: 1890,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.tee2,
+    tags: ['azadi-day'],
+    stock: 60,
+    description: 'Soft jersey with city script and wheat motif.',
+    options: { colors: ['Bone', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Bone', size: 'Small', waistSize: null, stock: 10 },
+      { color: 'Bone', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 10 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: null,
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Independence Day Sticker Pack Bundle',
+    slug: 'azadi-sticker-pack-bundle-shirt',
+    productType: 'shirt',
+    price: 1590,
+    initialPrice: 1890,
+    discountedPrice: 1590,
+    discountPercent: 16,
+    image: IMG.tee1,
+    tags: ['azadi-day'],
+    stock: 100,
+    description: 'Bundle tee — includes digital sticker pack code on tag.',
+    options: { colors: ['White'], sizes: ['Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'White', size: 'Medium', waistSize: null, stock: 40 },
+      { color: 'White', size: 'Large', waistSize: null, stock: 60 },
+    ],
+  },
+  // —— Anime: hot drops
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'hero-tees',
+    isHotDrop: true,
+    hotDropOrder: 0,
     name: 'Neon Hero Anime Shirt',
     slug: 'neon-hero-anime-shirt',
     productType: 'shirt',
@@ -99,15 +426,11 @@ const products = [
     initialPrice: 3890,
     discountedPrice: 2990,
     discountPercent: 23,
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80',
+    image: IMG.anime1,
     tags: ['anime-merch'],
     stock: 80,
     description: 'Anime-inspired street shirt with neon character art print.',
-    options: {
-      colors: ['Purple', 'Blue', 'Black'],
-      sizes: ['Small', 'Medium', 'Large'],
-      waistSizes: [],
-    },
+    options: { colors: ['Purple', 'Blue', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
     variantStock: [
       { color: 'Purple', size: 'Small', waistSize: null, stock: 10 },
       { color: 'Purple', size: 'Medium', waistSize: null, stock: 12 },
@@ -116,6 +439,10 @@ const products = [
     ],
   },
   {
+    eventSlug: 'anime-merch',
+    categorySlug: 'street-bottoms',
+    isHotDrop: true,
+    hotDropOrder: 1,
     name: 'Manga Runner Pants',
     slug: 'manga-runner-pants',
     productType: 'pants',
@@ -123,20 +450,231 @@ const products = [
     initialPrice: 2590,
     discountedPrice: 2190,
     discountPercent: 15,
-    image: 'https://images.unsplash.com/photo-1593032465171-8bd2f72ac8c0?auto=format&fit=crop&w=1200&q=80',
+    image: IMG.street,
     tags: ['anime-merch'],
     stock: 90,
     description: 'Anime-inspired runner pants built for comfort and bold character style.',
-    options: {
-      colors: ['Crimson', 'Electric Blue', 'Neon Yellow'],
-      sizes: [],
-      waistSizes: [28, 30, 32, 34],
-    },
+    options: { colors: ['Crimson', 'Electric Blue', 'Neon Yellow'], sizes: [], waistSizes: [28, 30, 32, 34] },
     variantStock: [
       { color: 'Crimson', size: '', waistSize: 28, stock: 10 },
       { color: 'Crimson', size: '', waistSize: 30, stock: 9 },
       { color: 'Electric Blue', size: '', waistSize: 32, stock: 10 },
       { color: 'Neon Yellow', size: '', waistSize: 34, stock: 7 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'night-market',
+    isHotDrop: true,
+    hotDropOrder: 2,
+    name: 'Tokyo Ghost Oversized Tee',
+    slug: 'anime-tokyo-ghost-oversized-tee',
+    productType: 'shirt',
+    price: 2890,
+    initialPrice: 3490,
+    discountedPrice: 2890,
+    discountPercent: 17,
+    image: IMG.anime2,
+    tags: ['anime-merch'],
+    stock: 44,
+    description: 'Glow ink accents under UV — festival ready.',
+    options: { colors: ['Ink', 'Magenta'], sizes: ['Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Ink', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Ink', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Magenta', size: 'Large', waistSize: null, stock: 12 },
+      { color: 'Magenta', size: 'X-Large', waistSize: null, stock: 12 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'studio-collectors',
+    isHotDrop: true,
+    hotDropOrder: 3,
+    name: 'Director Cut Heavyweight Tee',
+    slug: 'anime-director-cut-heavyweight-tee',
+    productType: 'shirt',
+    price: 3490,
+    initialPrice: 3490,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.anime3,
+    tags: ['anime-merch'],
+    stock: 22,
+    description: '320gsm cotton — embroidered studio seal on hem.',
+    options: { colors: ['Ash', 'Black'], sizes: ['Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Ash', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Ash', size: 'X-Large', waistSize: null, stock: 6 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 5 },
+      { color: 'Black', size: 'X-Large', waistSize: null, stock: 3 },
+    ],
+  },
+  // —— Anime: category-only
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'hero-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Sensei Vintage Wash Tee',
+    slug: 'anime-sensei-vintage-wash-tee',
+    productType: 'shirt',
+    price: 2490,
+    initialPrice: 2990,
+    discountedPrice: 2490,
+    discountPercent: 17,
+    image: IMG.anime1,
+    tags: ['anime-merch'],
+    stock: 52,
+    description: 'Mineral wash with faded kanji chest hit.',
+    options: { colors: ['Indigo', 'Rust'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Indigo', size: 'Small', waistSize: null, stock: 9 },
+      { color: 'Indigo', size: 'Medium', waistSize: null, stock: 11 },
+      { color: 'Rust', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Rust', size: 'Large', waistSize: null, stock: 10 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'hero-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Chibi Squad Crop Tee',
+    slug: 'anime-chibi-squad-crop-tee',
+    productType: 'shirt',
+    price: 2190,
+    initialPrice: 2190,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.anime2,
+    tags: ['anime-merch'],
+    stock: 38,
+    description: 'Cropped box fit with four-character lineup graphic.',
+    options: { colors: ['Lavender', 'Mint'], sizes: ['Small', 'Medium'], waistSizes: [] },
+    variantStock: [
+      { color: 'Lavender', size: 'Small', waistSize: null, stock: 10 },
+      { color: 'Lavender', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Mint', size: 'Small', waistSize: null, stock: 9 },
+      { color: 'Mint', size: 'Medium', waistSize: null, stock: 9 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'street-bottoms',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Panel Print Wide-Leg Pants',
+    slug: 'anime-panel-print-wide-leg-pants',
+    productType: 'pants',
+    price: 2590,
+    initialPrice: 2990,
+    discountedPrice: 2590,
+    discountPercent: 13,
+    image: IMG.street,
+    tags: ['anime-merch'],
+    stock: 41,
+    description: 'Manga panels down each leg — wide silhouette.',
+    options: { colors: ['Black', 'Charcoal'], sizes: [], waistSizes: [30, 32, 34] },
+    variantStock: [
+      { color: 'Black', size: '', waistSize: 30, stock: 10 },
+      { color: 'Black', size: '', waistSize: 32, stock: 12 },
+      { color: 'Charcoal', size: '', waistSize: 32, stock: 10 },
+      { color: 'Charcoal', size: '', waistSize: 34, stock: 9 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'street-bottoms',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Mecha Panel Joggers',
+    slug: 'anime-mecha-panel-joggers',
+    productType: 'pants',
+    price: 2390,
+    initialPrice: 2390,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.urban,
+    tags: ['anime-merch'],
+    stock: 47,
+    description: 'Tapered cuff with tech-panel knee overlays.',
+    options: { colors: ['Gunmetal', 'Navy'], sizes: [], waistSizes: [30, 32, 34, 36] },
+    variantStock: [
+      { color: 'Gunmetal', size: '', waistSize: 30, stock: 8 },
+      { color: 'Gunmetal', size: '', waistSize: 32, stock: 10 },
+      { color: 'Navy', size: '', waistSize: 34, stock: 10 },
+      { color: 'Navy', size: '', waistSize: 36, stock: 9 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'night-market',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'RGB Split Anime Tee',
+    slug: 'anime-rgb-split-tee',
+    productType: 'shirt',
+    price: 2690,
+    initialPrice: 3190,
+    discountedPrice: 2690,
+    discountPercent: 16,
+    image: IMG.anime3,
+    tags: ['anime-merch'],
+    stock: 36,
+    description: 'RGB glitch portrait — limited night-market run.',
+    options: { colors: ['Black', 'Cyber Green'], sizes: ['Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Cyber Green', size: 'Medium', waistSize: null, stock: 8 },
+      { color: 'Cyber Green', size: 'Large', waistSize: null, stock: 6 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'studio-collectors',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Cel Shade Hoodie-Shirt Hybrid',
+    slug: 'anime-cel-shade-hybrid-shirt',
+    productType: 'shirt',
+    price: 3190,
+    initialPrice: 3790,
+    discountedPrice: 3190,
+    discountPercent: 16,
+    image: IMG.anime2,
+    tags: ['anime-merch'],
+    stock: 24,
+    description: 'Double-layer hood stitched to heavy tee body.',
+    options: { colors: ['Concrete', 'Wine'], sizes: ['Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Concrete', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Concrete', size: 'X-Large', waistSize: null, stock: 6 },
+      { color: 'Wine', size: 'Large', waistSize: null, stock: 6 },
+      { color: 'Wine', size: 'X-Large', waistSize: null, stock: 4 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: null,
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Con Exclusive Mystery Tee',
+    slug: 'anime-con-exclusive-mystery-tee',
+    productType: 'shirt',
+    price: 1790,
+    initialPrice: 1790,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.anime1,
+    tags: ['anime-merch'],
+    stock: 120,
+    description: 'Blind drop graphic — each tee unique variant.',
+    options: { colors: ['Random'], sizes: ['Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Random', size: 'Medium', waistSize: null, stock: 60 },
+      { color: 'Random', size: 'Large', waistSize: null, stock: 60 },
     ],
   },
 ]
@@ -146,20 +684,48 @@ async function seed() {
     await mongoose.connect(mongoUri)
     console.log('Connected to MongoDB')
 
-    await Event.deleteMany({})
     await Product.deleteMany({})
+    await Category.deleteMany({})
+    await Event.deleteMany({})
 
     const insertedEvents = await Event.insertMany(events)
     const eventBySlug = new Map(insertedEvents.map((event) => [event.slug, event]))
-    const productsWithEvents = products.map((product) => {
-      const eventSlug = product.tags?.[0]
-      const event = eventBySlug.get(eventSlug)
+
+    const categoriesToInsert = categoryDefs.map((def) => ({
+      event: eventBySlug.get(def.eventSlug)?._id,
+      name: def.name,
+      slug: def.slug,
+      description: def.description,
+      sortOrder: def.sortOrder,
+    })).filter((c) => c.event)
+
+    const insertedCategories = await Category.insertMany(categoriesToInsert)
+    const categoryByKey = new Map(
+      categoryDefs.map((def, i) => [`${def.eventSlug}:${def.slug}`, insertedCategories[i]._id])
+    )
+
+    const productsWithRefs = productDefs.map((def, productIndex) => {
+      const event = eventBySlug.get(def.eventSlug)
+      const catKey = def.categorySlug ? `${def.eventSlug}:${def.categorySlug}` : null
+      const categoryId = catKey ? categoryByKey.get(catKey) : null
+      const {
+        eventSlug: _es,
+        categorySlug: _cs,
+        isHotDrop,
+        hotDropOrder,
+        ...productRest
+      } = def
       return {
-        ...product,
+        ...productRest,
         event: event?._id || null,
+        category: categoryId || null,
+        isHotDrop: Boolean(isHotDrop),
+        hotDropOrder: Number(hotDropOrder) || 0,
+        shippingRates: defaultShippingRates(productIndex, def.eventSlug),
       }
     })
-    const insertedProducts = await Product.insertMany(productsWithEvents)
+
+    const insertedProducts = await Product.insertMany(productsWithRefs)
 
     // Seed admin user (upsert so re-running is safe)
     const adminEmail = 'zaroor.shop1@gmail.com'
@@ -173,8 +739,10 @@ async function seed() {
       console.log('Admin user already exists, role ensured')
     }
 
+    const hotCount = productsWithRefs.filter((p) => p.isHotDrop).length
     console.log(`Seeded ${insertedEvents.length} events`)
-    console.log(`Seeded ${insertedProducts.length} products`)
+    console.log(`Seeded ${insertedCategories.length} categories`)
+    console.log(`Seeded ${insertedProducts.length} products (${hotCount} hot drops)`)
 
     await mongoose.disconnect()
     console.log('Done')

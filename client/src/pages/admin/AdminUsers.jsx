@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../utils/api'
+import { ADMIN_INPUT, ADMIN_SELECT } from '../../utils/adminClasses.js'
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([])
@@ -47,7 +48,7 @@ export default function AdminUsers() {
           value={search}
           onChange={handleSearch}
           placeholder="Search by name or email..."
-          className="w-64 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-white/30"
+          className={`${ADMIN_INPUT} w-full max-w-xs`}
         />
       </div>
 
@@ -79,7 +80,7 @@ export default function AdminUsers() {
                     <select
                       value={u.role}
                       onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                      className="rounded bg-white/5 px-2 py-1 text-xs"
+                      className={`${ADMIN_SELECT} !min-h-0 rounded-md px-2 py-1 text-xs`}
                     >
                       <option value="user">user</option>
                       <option value="admin">admin</option>

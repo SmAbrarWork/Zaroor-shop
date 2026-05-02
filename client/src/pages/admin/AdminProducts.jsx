@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import api from '../../utils/api'
 import { formatCurrencyPKR } from '../../utils/dateUtils'
+import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA } from '../../utils/adminClasses.js'
+import { SHIPPING_DESTINATIONS } from '../../constants/shippingDestinations.js'
+
+const emptyShippingByDest = () =>
+  Object.fromEntries(SHIPPING_DESTINATIONS.map((d) => [d.key, '']))
 
 const emptyProduct = {
   name: '',
   slug: '',
   event: '',
+  category: '',
+  isHotDrop: false,
+  hotDropOrder: 0,
   productType: 'shirt',
   initialPrice: '',
   discountedPrice: '',
@@ -21,6 +30,7 @@ const emptyProduct = {
   variantWaistSize: '',
   variantQty: '',
   variantStock: [],
+  shippingByDest: emptyShippingByDest(),
 }
 
 export default function AdminProducts() {
@@ -31,14 +41,13 @@ export default function AdminProducts() {
   const [form, setForm] = useState(emptyProduct)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [optionInput, setOptionInput] = useState({ colors: '', sizes: '', waistSizes: '' })
+  const [categoriesForEvent, setCategoriesForEvent] = useState([])
 
   const clearForm = () => {
     setForm(emptyProduct)
     setEditing(null)
     setError('')
-    setSuccess('')
     setOptionInput({ colors: '', sizes: '', waistSizes: '' })
   }
 
@@ -129,10 +138,20 @@ export default function AdminProducts() {
     fetchEvents()
   }, [])
 
+  useEffect(() => {
+    if (!form.event) {
+      setCategoriesForEvent([])
+      return
+    }
+    api
+      .get('/admin/categories', { params: { eventId: form.event } })
+      .then(({ data }) => setCategoriesForEvent(data.data || []))
+      .catch(() => setCategoriesForEvent([]))
+  }, [form.event])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setSuccess('')
     const selectedEvent = events.find((ev) => ev._id === form.event)
     const tags = typeof form.tags === 'string'
       ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -148,10 +167,21 @@ export default function AdminProducts() {
       stock: Number(entry.stock ?? 0),
     }))
 
+    const shippingRates = SHIPPING_DESTINATIONS.map((d) => {
+      const raw = form.shippingByDest?.[d.key]?.toString().trim()
+      if (raw === '' || raw === undefined) return null
+      const cost = Number(raw)
+      if (!Number.isFinite(cost) || cost < 0) return null
+      return { destination: d.key, cost: Math.round(cost) }
+    }).filter(Boolean)
+
     const payload = {
       name: form.name,
       slug: form.slug,
       event: form.event || null,
+      category: form.category || null,
+      isHotDrop: Boolean(form.isHotDrop),
+      hotDropOrder: Number(form.hotDropOrder) || 0,
       productType: form.productType,
       initialPrice: Number(form.initialPrice),
       discountedPrice: form.discountedPrice === '' ? null : Number(form.discountedPrice),
@@ -165,6 +195,7 @@ export default function AdminProducts() {
         waistSizes: form.waistSizes,
       },
       variantStock,
+      shippingRates,
     }
     if (payload.productType === 'shirt' && payload.options.sizes.length === 0) {
       setError('Shirt products need at least one size')
@@ -187,9 +218,13 @@ export default function AdminProducts() {
       setShowForm(false)
       clearForm()
       fetchProducts()
-      setSuccess(editing ? 'Product updated successfully.' : 'Product created successfully.')
+      toast.success(editing ? 'Product updated' : 'Product published', {
+        description: payload.name,
+      })
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save product')
+      const msg = err.response?.data?.message || 'Failed to save product'
+      setError(msg)
+      toast.error(msg)
     }
   }
 
@@ -199,6 +234,9 @@ export default function AdminProducts() {
       name: product.name,
       slug: product.slug,
       event: product.event?._id || '',
+      category: product.category?._id || '',
+      isHotDrop: Boolean(product.isHotDrop),
+      hotDropOrder: product.hotDropOrder ?? 0,
       productType: product.productType || 'shirt',
       image: product.image,
       initialPrice: product.initialPrice ?? product.price,
@@ -214,20 +252,50 @@ export default function AdminProducts() {
       variantWaistSize: '',
       variantQty: '',
       variantStock: product.variantStock || [],
+      shippingByDest: (() => {
+        const m = emptyShippingByDest()
+        for (const r of product.shippingRates || []) {
+          if (r?.destination) m[r.destination] = String(r.cost ?? '')
+        }
+        return m
+      })(),
     })
     setShowForm(true)
   }
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
-    await api.delete(`/admin/products/${id}`)
-    fetchProducts()
+    try {
+      await api.delete(`/admin/products/${id}`)
+      fetchProducts()
+      toast.success('Product removed')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not delete product')
+    }
   }
 
   if (loading) return <p className="text-sm text-white/50">Loading...</p>
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] p-4 text-sm text-white/80">
+        <p className="font-semibold text-white/95">Storefront workflow</p>
+        <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-xs leading-relaxed text-white/70">
+          <li>
+            <strong className="text-white/85">Event</strong> — locks this product to one campaign (Azadi, Anime, etc.).
+          </li>
+          <li>
+            <strong className="text-white/85">Category</strong> — controls where it appears under the shop menu (e.g. Street bottoms). Same category name can exist per event without mixing.
+          </li>
+          <li>
+            <strong className="text-white/85">Hot drop</strong> — only these show on the home page strip; use order for left-to-right priority. Everything else is reached via Full catalog or category tabs.
+          </li>
+          <li>Product images are shown in a fixed tile — large uploads are cropped to fit.</li>
+          <li>
+            <strong className="text-white/85">Shipping (PKR per item)</strong> — set rates per destination zone; checkout adds (rate × quantity) per product.
+          </li>
+        </ol>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-bold">Products ({products.length})</h2>
         <button
@@ -240,36 +308,58 @@ export default function AdminProducts() {
           {showForm ? 'Cancel' : '+ Add Product'}
         </button>
       </div>
-      {success && (
-        <p className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
-          {success}
-        </p>
-      )}
-
       {showForm && (
-        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:grid-cols-2 xl:grid-cols-3">
+        <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/15 bg-slate-900/40 p-4 sm:grid-cols-2 xl:grid-cols-3">
           {error && <p className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 sm:col-span-2">{error}</p>}
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <select value={form.event} onChange={(e) => setForm({ ...form, event: e.target.value })} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30">
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required className={ADMIN_INPUT} />
+          <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required className={ADMIN_INPUT} />
+          <select value={form.event} onChange={(e) => setForm({ ...form, event: e.target.value, category: '' })} className={`${ADMIN_SELECT} w-full`}>
             <option value="">No Event</option>
             {events.map((event) => (
               <option key={event._id} value={event._id}>{event.name}</option>
             ))}
           </select>
-          <select value={form.productType} onChange={(e) => setForm({ ...form, productType: e.target.value })} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30">
+          <select
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            className={`${ADMIN_SELECT} w-full`}
+            disabled={!form.event}
+          >
+            <option value="">No category</option>
+            {categoriesForEvent.map((c) => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isHotDrop}
+              onChange={(e) => setForm({ ...form, isHotDrop: e.target.checked })}
+            />
+            Hot drop (featured strip)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={form.hotDropOrder}
+            onChange={(e) => setForm({ ...form, hotDropOrder: e.target.value })}
+            placeholder="Hot drop order"
+            title="Lower numbers appear first in Hot drops"
+            className={ADMIN_INPUT}
+          />
+          <select value={form.productType} onChange={(e) => setForm({ ...form, productType: e.target.value })} className={`${ADMIN_SELECT} w-full`}>
             <option value="shirt">Shirt</option>
             <option value="pants">Pants</option>
             <option value="other">Other</option>
           </select>
-          <input value={form.initialPrice} onChange={(e) => setForm({ ...form, initialPrice: e.target.value })} placeholder="Initial Price (PKR)" type="number" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.discountedPrice} onChange={(e) => setForm({ ...form, discountedPrice: e.target.value })} placeholder="Discounted Price (optional)" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Stock" type="number" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
-          <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL" required className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.initialPrice} onChange={(e) => setForm({ ...form, initialPrice: e.target.value })} placeholder="Initial Price (PKR)" type="number" required className={ADMIN_INPUT} />
+          <input value={form.discountedPrice} onChange={(e) => setForm({ ...form, discountedPrice: e.target.value })} placeholder="Discounted Price (optional)" type="number" className={ADMIN_INPUT} />
+          <input value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="Stock" type="number" className={ADMIN_INPUT} />
+          <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL" required className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
           <div className="space-y-2 sm:col-span-2 xl:col-span-3">
             <p className="text-xs text-white/60">Colors</p>
             <div className="flex gap-2">
-              <input value={optionInput.colors} onChange={(e) => setOptionInput({ ...optionInput, colors: e.target.value })} placeholder="Type color and press Add" className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+              <input value={optionInput.colors} onChange={(e) => setOptionInput({ ...optionInput, colors: e.target.value })} placeholder="Type color and press Add" className={`${ADMIN_INPUT} flex-1`} />
               <button type="button" onClick={() => addOption('colors')} className="rounded-lg border border-white/20 px-3 text-xs">Add</button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -283,7 +373,7 @@ export default function AdminProducts() {
           <div className="space-y-2 sm:col-span-2 xl:col-span-3">
             <p className="text-xs text-white/60">Sizes (for shirts)</p>
             <div className="flex gap-2">
-              <input value={optionInput.sizes} onChange={(e) => setOptionInput({ ...optionInput, sizes: e.target.value })} placeholder="Type size and press Add" className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+              <input value={optionInput.sizes} onChange={(e) => setOptionInput({ ...optionInput, sizes: e.target.value })} placeholder="Type size and press Add" className={`${ADMIN_INPUT} flex-1`} />
               <button type="button" onClick={() => addOption('sizes')} className="rounded-lg border border-white/20 px-3 text-xs">Add</button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -297,7 +387,7 @@ export default function AdminProducts() {
           <div className="space-y-2 sm:col-span-2 xl:col-span-3">
             <p className="text-xs text-white/60">Waist sizes (for pants)</p>
             <div className="flex gap-2">
-              <input value={optionInput.waistSizes} onChange={(e) => setOptionInput({ ...optionInput, waistSizes: e.target.value })} placeholder="Type waist size number (e.g. 30)" className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30" />
+              <input value={optionInput.waistSizes} onChange={(e) => setOptionInput({ ...optionInput, waistSizes: e.target.value })} placeholder="Type waist size number (e.g. 30)" className={`${ADMIN_INPUT} flex-1`} />
               <button type="button" onClick={() => addOption('waistSizes')} className="rounded-lg border border-white/20 px-3 text-xs">Add</button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -308,14 +398,14 @@ export default function AdminProducts() {
               ))}
             </div>
           </div>
-          <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="Tags (comma-separated)" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="Tags (comma-separated)" className={`${ADMIN_INPUT} sm:col-span-2 xl:col-span-3`} />
           <div className="space-y-2 rounded-lg border border-white/10 bg-white/[0.02] p-3 sm:col-span-2 xl:col-span-3">
             <p className="text-xs text-white/60">Variant stock</p>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              <input value={form.variantColor} onChange={(e) => setForm({ ...form, variantColor: e.target.value })} placeholder="Color" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs outline-none focus:border-white/30" />
-              <input value={form.variantSize} onChange={(e) => setForm({ ...form, variantSize: e.target.value })} placeholder="Size" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs outline-none focus:border-white/30" />
-              <input value={form.variantWaistSize} onChange={(e) => setForm({ ...form, variantWaistSize: e.target.value })} placeholder="Waist size" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs outline-none focus:border-white/30" />
-              <input value={form.variantQty} onChange={(e) => setForm({ ...form, variantQty: e.target.value })} placeholder="Stock" type="number" min="0" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs outline-none focus:border-white/30" />
+              <input value={form.variantColor} onChange={(e) => setForm({ ...form, variantColor: e.target.value })} placeholder="Color" className={`${ADMIN_INPUT} py-2 text-xs`} />
+              <input value={form.variantSize} onChange={(e) => setForm({ ...form, variantSize: e.target.value })} placeholder="Size" className={`${ADMIN_INPUT} py-2 text-xs`} />
+              <input value={form.variantWaistSize} onChange={(e) => setForm({ ...form, variantWaistSize: e.target.value })} placeholder="Waist size" className={`${ADMIN_INPUT} py-2 text-xs`} />
+              <input value={form.variantQty} onChange={(e) => setForm({ ...form, variantQty: e.target.value })} placeholder="Stock" type="number" min="0" className={`${ADMIN_INPUT} py-2 text-xs`} />
               <button type="button" onClick={addVariantRow} className="rounded-lg border border-white/20 px-3 py-2 text-xs hover:bg-white/5">Add Variant</button>
             </div>
             {(form.variantStock || []).length > 0 && (
@@ -329,7 +419,33 @@ export default function AdminProducts() {
               </div>
             )}
           </div>
-          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" rows={2} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/30 sm:col-span-2 xl:col-span-3" />
+          <div className="space-y-2 sm:col-span-2 xl:col-span-3">
+            <p className="text-xs font-semibold text-white/85">Shipping cost (PKR per item, by destination)</p>
+            <p className="text-[11px] text-white/45">
+              Set how much to charge per quantity unit for each zone. Checkout sums these × qty. Leave blank for PKR 0.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {SHIPPING_DESTINATIONS.map((d) => (
+                <label key={d.key} className="block">
+                  <span className="text-[11px] text-white/55">{d.label}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={form.shippingByDest[d.key] ?? ''}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        shippingByDest: { ...form.shippingByDest, [d.key]: e.target.value },
+                      })}
+                    placeholder="0"
+                    className={`${ADMIN_INPUT} mt-0.5 w-full py-2 text-sm`}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description (shows on product cards and detail page)" rows={3} className={`${ADMIN_TEXTAREA} sm:col-span-2 xl:col-span-3`} />
           <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2 xl:col-span-3">
             {editing ? 'Update Product' : 'Create Product'}
           </button>
@@ -342,6 +458,8 @@ export default function AdminProducts() {
             <tr>
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Event</th>
+              <th className="px-4 py-2">Category</th>
+              <th className="px-4 py-2">Hot</th>
               <th className="px-4 py-2">Type</th>
               <th className="px-4 py-2">Price</th>
               <th className="px-4 py-2">Stock</th>
@@ -354,6 +472,8 @@ export default function AdminProducts() {
               <tr key={p._id} className="border-b border-white/5">
                 <td className="px-4 py-2 font-medium">{p.name}</td>
                 <td className="px-4 py-2 text-xs text-white/60">{p.event?.name || '-'}</td>
+                <td className="px-4 py-2 text-xs text-white/55">{p.category?.name || '—'}</td>
+                <td className="px-4 py-2 text-xs">{p.isHotDrop ? <span className="text-amber-300">Yes</span> : '—'}</td>
                 <td className="px-4 py-2 text-xs uppercase text-white/60">{p.productType || 'other'}</td>
                 <td className="px-4 py-2">
                   {p.discountedPrice

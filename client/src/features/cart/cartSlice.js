@@ -55,6 +55,8 @@ const initialState = {
   items: loadGuestCart(),
   loading: false,
   error: null,
+  /** Increments when items are added — drives cart icon shake in the header */
+  cartIconBump: 0,
 }
 
 const getItemId = (item) => item.product?._id || item.product?.id || item.product
@@ -87,6 +89,7 @@ const cartSlice = createSlice({
       } else {
         state.items.push({ product, quantity, selectedOptions: normalizedOptions, variantKey })
       }
+      state.cartIconBump += 1
       saveGuestCart(state.items)
     },
     updateQuantityLocal: (state, action) => {
@@ -118,7 +121,10 @@ const cartSlice = createSlice({
       .addCase(fetchCart.pending, (state) => { state.loading = true })
       .addCase(fetchCart.fulfilled, setFromServer)
       .addCase(fetchCart.rejected, (state) => { state.loading = false })
-      .addCase(addToCartServer.fulfilled, setFromServer)
+      .addCase(addToCartServer.fulfilled, (state, action) => {
+        setFromServer(state, action)
+        state.cartIconBump += 1
+      })
       .addCase(updateCartItemServer.fulfilled, setFromServer)
       .addCase(removeFromCartServer.fulfilled, setFromServer)
   },

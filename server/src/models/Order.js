@@ -31,6 +31,15 @@ const orderSchema = new mongoose.Schema(
       address: { type: String, required: true },
       city: { type: String, required: true },
     },
+    paymentMethod: {
+      type: String,
+      enum: ['jazzcash', 'easypaisa', 'cod'],
+      default: null,
+    },
+    /** Zone used to sum per-product shipping (see Product.shippingRates). */
+    shippingDestination: { type: String, default: null },
+    /** Total shipping in PKR for this order. */
+    shippingAmount: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 )
