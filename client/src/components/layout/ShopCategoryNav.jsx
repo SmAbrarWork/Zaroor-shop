@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks'
 import { selectActiveEvent } from '../../features/event/eventSelectors'
-import { selectCategories } from '../../features/categories/categorySelectors'
 
 const linkBase =
   'whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-bold transition-colors duration-200'
@@ -10,7 +9,6 @@ const active = 'border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)] 
 
 export default function ShopCategoryNav() {
   const activeEvent = useAppSelector(selectActiveEvent)
-  const categories = useAppSelector(selectCategories)
 
   if (!activeEvent) return null
 
@@ -24,20 +22,11 @@ export default function ShopCategoryNav() {
         Hot drops
       </NavLink>
       <NavLink
-        to="/shop/all"
+        to="/shop/shirts"
         className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
       >
-        Full catalog
+        Shirts
       </NavLink>
-      {categories.map((c) => (
-        <NavLink
-          key={c._id}
-          to={`/shop/${c.slug}`}
-          className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
-        >
-          {c.name}
-        </NavLink>
-      ))}
     </nav>
   )
 }

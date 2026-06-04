@@ -102,8 +102,17 @@ export default function OrderConfirmation() {
               <span className="tabular-nums">{formatCurrencyPKR(itemsSubtotal)}</span>
             </div>
             <div className="flex justify-between gap-4">
-              <span>Shipping ({order.shippingDestination ? labelForShippingKey(order.shippingDestination) : '—'})</span>
-              <span className="tabular-nums">{formatCurrencyPKR(shippingAmt)}</span>
+              <span>
+                Shipping ({order.shippingDestination ? labelForShippingKey(order.shippingDestination) : '—'})
+                {order.freeShippingQualified ? (
+                  <span className="ml-1 text-emerald-400/90">· promo</span>
+                ) : null}
+              </span>
+              <span className="tabular-nums">
+                {order.freeShippingQualified && shippingAmt === 0
+                  ? 'Free'
+                  : formatCurrencyPKR(shippingAmt)}
+              </span>
             </div>
           </div>
           <p className="mt-3 text-xs font-bold uppercase tracking-wider text-white/55">Order total</p>

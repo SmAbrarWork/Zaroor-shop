@@ -38,6 +38,17 @@ export const env = {
   ga4ApiSecret: process.env.GA4_API_SECRET ?? '',
 }
 
-if (env.nodeEnv === 'production' && env.jwtSecret === 'change-me-in-production') {
-  console.warn('[config] JWT_SECRET is still the default; set a strong secret in server/.env')
+const weakJwtDefaults = new Set([
+  'change-me-in-production',
+  'your_jwt_secret_here',
+  'zeroor-dev-secret-change-in-prod',
+])
+
+if (env.nodeEnv === 'production') {
+  if (weakJwtDefaults.has(env.jwtSecret) || env.jwtSecret.length < 32) {
+    console.warn('[config] Set a strong JWT_SECRET (32+ chars) in server/.env before going live')
+  }
+  if (!env.mongoUri.includes('mongodb')) {
+    console.warn('[config] MONGO_URI looks unset; database connection will fail')
+  }
 }

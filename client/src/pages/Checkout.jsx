@@ -16,25 +16,39 @@ import Button from '../components/ui/Button'
 import SafeProductImage from '../components/ui/SafeProductImage'
 import { ADMIN_SELECT } from '../utils/adminClasses.js'
 import { SHIPPING_DESTINATIONS } from '../constants/shippingDestinations.js'
-import { totalShippingForCartItems } from '../utils/shipping.js'
+import {
+  applyFreeShippingRule,
+  qualifiesFreeShippingSingleProduct,
+  minExtraUnitsForSingleProductFreeShipping,
+  totalShippingForCartItems,
+} from '../utils/shipping.js'
 
 const PAYMENT_OPTIONS = [
   {
     id: 'cod',
     label: 'Cash on delivery',
     hint: 'Pay in cash when your order arrives at your door',
+    enabled: true,
   },
   {
     id: 'jazzcash',
     label: 'JazzCash',
-    hint: 'Mobile wallet — details shared after you place the order',
+    hint: 'Coming soon',
+    enabled: false,
   },
   {
     id: 'easypaisa',
     label: 'Easypaisa',
-    hint: 'Mobile wallet — details shared after you place the order',
+    hint: 'Coming soon',
+    enabled: false,
   },
 ]
+
+const defaultPaymentMethods = {
+  cod: true,
+  jazzcash: false,
+  easypaisa: false,
+}
 
 export default function Checkout() {
   const navigate = useNavigate()
@@ -52,6 +66,30 @@ export default function Checkout() {
   const [city, setCity] = useState('')
   const [shippingDestination, setShippingDestination] = useState('karachi')
   const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [freeShippingMinQty, setFreeShippingMinQty] = useState(null)
+  const [paymentMethods, setPaymentMethods] = useState(defaultPaymentMethods)
+
+  useEffect(() => {
+    api.get('/shop-settings').then(({ data }) => {
+      const q = data?.data?.freeShippingMinQty
+      setFreeShippingMinQty(q != null && q >= 1 ? q : null)
+      setPaymentMethods({
+        cod: data?.data?.paymentMethods?.cod !== false,
+        jazzcash: data?.data?.paymentMethods?.jazzcash === true,
+        easypaisa: data?.data?.paymentMethods?.easypaisa === true,
+      })
+    }).catch(() => {
+      setFreeShippingMinQty(null)
+      setPaymentMethods(defaultPaymentMethods)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!paymentMethods[paymentMethod]) {
+      const firstEnabled = PAYMENT_OPTIONS.find((p) => paymentMethods[p.id])?.id
+      setPaymentMethod(firstEnabled || '')
+    }
+  }, [paymentMethod, paymentMethods])
 
   useEffect(() => {
     if (isAuthenticated) dispatch(fetchCart())
@@ -75,6 +113,10 @@ export default function Checkout() {
     e.preventDefault()
     if (!paymentMethod) {
       toast.error('Choose a payment method')
+      return
+    }
+    if (!paymentMethods[paymentMethod]) {
+      toast.error('Selected payment method is currently unavailable')
       return
     }
     setSubmitting(true)
@@ -109,11 +151,20 @@ export default function Checkout() {
   )
 
   const subtotal = total
-  const shippingTotal = useMemo(
+  const rawShipping = useMemo(
     () => totalShippingForCartItems(items, shippingDestination),
     [items, shippingDestination]
   )
+  const shippingTotal = useMemo(
+    () => applyFreeShippingRule(rawShipping, items, freeShippingMinQty),
+    [rawShipping, items, freeShippingMinQty]
+  )
   const grandTotal = subtotal + shippingTotal
+  const qualifiesFreeShipping = qualifiesFreeShippingSingleProduct(items, freeShippingMinQty)
+  const extraForFreeShip =
+    freeShippingMinQty != null && !qualifiesFreeShipping
+      ? minExtraUnitsForSingleProductFreeShipping(items, freeShippingMinQty)
+      : 0
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: '/checkout' }} />
@@ -139,8 +190,17 @@ export default function Checkout() {
           <strong className="font-bold text-white/80">{count}</strong>{' '}
           {count === 1 ? 'item' : 'items'} · <strong className="font-bold text-white/80">Order total</strong>{' '}
           {formatCurrencyPKR(grandTotal)}
-          {shippingTotal > 0 && (
-            <span className="text-white/45"> ({formatCurrencyPKR(subtotal)} + {formatCurrencyPKR(shippingTotal)} shipping)</span>
+          {(shippingTotal > 0 || qualifiesFreeShipping) && (
+            <span className="text-white/45">
+              {' '}
+              ({formatCurrencyPKR(subtotal)}
+              {qualifiesFreeShipping && rawShipping > 0
+                ? ` · shipping free (${freeShippingMinQty}+ of one product)`
+                : shippingTotal > 0
+                  ? ` + ${formatCurrencyPKR(shippingTotal)} shipping`
+                  : ''}
+              )
+            </span>
           )}
         </p>
       </div>
@@ -169,6 +229,15 @@ export default function Checkout() {
               </select>
               <span className="mt-1 block text-[11px] text-white/40">
                 Rates are set per product in admin (PKR per item). Match this to your city when possible.
+                {freeShippingMinQty != null && (
+                  <span className="block pt-1 text-emerald-400/90">
+                    {qualifiesFreeShipping
+                      ? `You have at least ${freeShippingMinQty} of one product — free shipping applies.`
+                      : extraForFreeShip > 0
+                        ? `Add ${extraForFreeShip} more of one product for free shipping (total ${freeShippingMinQty}+ of the same product).`
+                        : null}
+                  </span>
+                )}
               </span>
             </label>
             <p className="mt-6 text-xs font-bold text-white/75 sm:text-sm">Delivery address</p>
@@ -228,21 +297,30 @@ export default function Checkout() {
               <strong className="font-bold text-white/85">Choose a method</strong> — instructions follow after you place the order.
             </p>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {PAYMENT_OPTIONS.map((opt) => (
+              {PAYMENT_OPTIONS.map((opt) => {
+                const enabled = Boolean(paymentMethods[opt.id])
+                return (
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setPaymentMethod(opt.id)}
+                  onClick={() => enabled && setPaymentMethod(opt.id)}
+                  disabled={!enabled}
                   className={`rounded-2xl border px-4 py-4 text-left transition-colors min-h-[88px] ${
                     paymentMethod === opt.id
                       ? 'border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)]'
-                      : 'border-white/12 bg-white/[0.04] hover:border-white/25'
+                      : enabled
+                        ? 'border-white/12 bg-white/[0.04] hover:border-white/25'
+                        : 'border-white/10 bg-white/[0.02] opacity-60 cursor-not-allowed'
                   }`}
                 >
-                  <span className="font-bold">{opt.label}</span>
-                  <span className="mt-1 block text-xs text-white/45">{opt.hint}</span>
+                  <span className="font-bold">
+                    {opt.label}
+                    {!enabled ? <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-300">Coming soon</span> : null}
+                  </span>
+                  <span className="mt-1 block text-xs text-white/45">{enabled ? opt.hint : 'Coming soon'}</span>
                 </button>
-              ))}
+                )
+              })}
             </div>
           </section>
 
@@ -293,7 +371,11 @@ export default function Checkout() {
             <div className="flex justify-between gap-4">
               <span className="text-white/55">Shipping</span>
               <span className={`tabular-nums font-medium ${shippingTotal === 0 ? 'text-emerald-400/95' : 'text-white/85'}`}>
-                {shippingTotal === 0 ? 'PKR 0' : formatCurrencyPKR(shippingTotal)}
+                {qualifiesFreeShipping && rawShipping > 0
+                  ? `Free (saved ${formatCurrencyPKR(rawShipping)})`
+                  : shippingTotal === 0
+                    ? 'PKR 0'
+                    : formatCurrencyPKR(shippingTotal)}
               </span>
             </div>
             <div className="flex justify-between gap-4 text-base font-black">

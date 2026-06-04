@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
+import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
+import api from '../utils/api'
 import { selectIsAuthenticated } from '../features/auth/authSelectors'
 import { selectCartItems, selectCartTotal, selectCartCount } from '../features/cart/cartSelectors'
 import {
@@ -18,6 +20,14 @@ export default function Cart() {
   const items = useAppSelector(selectCartItems)
   const total = useAppSelector(selectCartTotal)
   const count = useAppSelector(selectCartCount)
+  const [freeShippingMinQty, setFreeShippingMinQty] = useState(null)
+
+  useEffect(() => {
+    api.get('/shop-settings').then(({ data }) => {
+      const q = data?.data?.freeShippingMinQty
+      setFreeShippingMinQty(q != null && q >= 1 ? q : null)
+    }).catch(() => setFreeShippingMinQty(null))
+  }, [])
 
   const toLineId = (item) => {
     const productId = item.product?._id || item.product?.id
@@ -117,7 +127,13 @@ export default function Cart() {
           })}
         </div>
 
-        <CartSummary total={total} count={count} isAuthenticated={isAuthenticated} />
+        <CartSummary
+          total={total}
+          count={count}
+          isAuthenticated={isAuthenticated}
+          freeShippingMinQty={freeShippingMinQty}
+          cartItems={items}
+        />
       </div>
     </div>
   )

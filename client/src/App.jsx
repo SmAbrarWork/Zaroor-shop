@@ -16,6 +16,8 @@ import AdminProducts from './pages/admin/AdminProducts'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminEvents from './pages/admin/AdminEvents'
 import AdminCategories from './pages/admin/AdminCategories'
+import AdminShopSettings from './pages/admin/AdminShopSettings'
+import AdminCampaignBanners from './pages/admin/AdminCampaignBanners'
 
 export default function App() {
   return (
@@ -40,6 +42,8 @@ export default function App() {
         <Route path="categories" element={<AdminCategories />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="events" element={<AdminEvents />} />
+        <Route path="shop-settings" element={<AdminShopSettings />} />
+        <Route path="campaign-banners" element={<AdminCampaignBanners />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/404" replace />} />

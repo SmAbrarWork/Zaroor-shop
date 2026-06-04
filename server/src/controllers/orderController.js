@@ -1,7 +1,9 @@
 import { Order } from '../models/Order.js'
 import { Cart } from '../models/Cart.js'
 import { Product } from '../models/Product.js'
+import mongoose from 'mongoose'
 import { SHIPPING_DESTINATION_KEYS } from '../constants/shippingDestinations.js'
+import { getShopSettings } from '../services/shopSettingsService.js'
 
 const unitShippingForProduct = (productDoc, destinationKey) => {
   const rates = productDoc.shippingRates || []
@@ -24,9 +26,14 @@ const buildVariantKey = (selectedOptions = {}) => {
   return [normalized.color, normalized.size, normalized.waistSize ?? ''].join('|')
 }
 
-const PAYMENT_METHODS = ['jazzcash', 'easypaisa', 'cod']
+const PAYMENT_METHOD_LABELS = {
+  cod: 'cash on delivery',
+  jazzcash: 'JazzCash',
+  easypaisa: 'Easypaisa',
+}
 
 export const createOrder = async (req, res, next) => {
+  let session
   try {
     const { shippingAddress, paymentMethod, shippingDestination } = req.body
     if (!shippingAddress?.fullName || !shippingAddress?.phone || !shippingAddress?.address || !shippingAddress?.city) {
@@ -36,84 +43,116 @@ export const createOrder = async (req, res, next) => {
     if (!destKey || !SHIPPING_DESTINATION_KEYS.has(destKey)) {
       return res.status(400).json({ success: false, message: 'Select a shipping destination / zone' })
     }
-    if (!paymentMethod || !PAYMENT_METHODS.includes(paymentMethod)) {
-      return res.status(400).json({ success: false, message: 'Choose a valid payment method (JazzCash, Easypaisa, or cash on delivery)' })
+    const shopSettings = await getShopSettings()
+    const { paymentMethods } = shopSettings
+    const methodEnabled = Boolean(paymentMethods?.[paymentMethod])
+    if (!paymentMethod || !methodEnabled) {
+      const label = PAYMENT_METHOD_LABELS[paymentMethod] || 'Selected payment method'
+      return res.status(400).json({ success: false, message: `${label} is currently unavailable. Please use an active payment method.` })
     }
 
-    const cart = await Cart.findOne({ user: req.user._id }).populate('items.product')
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ success: false, message: 'Cart is empty' })
-    }
+    session = await mongoose.startSession()
+    let createdOrder = null
+    await session.withTransaction(async () => {
+      const cart = await Cart.findOne({ user: req.user._id }).populate('items.product').session(session)
+      if (!cart || cart.items.length === 0) {
+        const err = new Error('Cart is empty')
+        err.statusCode = 400
+        throw err
+      }
 
-    const productDocs = await Product.find({
-      _id: { $in: cart.items.map((i) => i.product._id) },
+      const productDocs = await Product.find({
+        _id: { $in: cart.items.map((i) => i.product._id) },
+      }).session(session)
+      const productMap = new Map(productDocs.map((p) => [p._id.toString(), p]))
+
+      for (const cartItem of cart.items) {
+        const productId = cartItem.product._id.toString()
+        const productDoc = productMap.get(productId)
+        if (!productDoc) {
+          const err = new Error(`Product not found: ${productId}`)
+          err.statusCode = 400
+          throw err
+        }
+        const selectedOptions = normalizeSelectedOptions(cartItem.selectedOptions || {})
+        const variantKey = buildVariantKey(selectedOptions)
+        const variantIndex = (productDoc.variantStock || []).findIndex(
+          (entry) => buildVariantKey(entry) === variantKey
+        )
+        const availableStock = variantIndex >= 0
+          ? Number(productDoc.variantStock[variantIndex].stock) || 0
+          : Number(productDoc.stock) || 0
+
+        if (cartItem.quantity > availableStock) {
+          const err = new Error(`${productDoc.name} only has ${availableStock} item(s) available for selected variant`)
+          err.statusCode = 400
+          throw err
+        }
+
+        if (variantIndex >= 0) {
+          productDoc.variantStock[variantIndex].stock = availableStock - cartItem.quantity
+        } else {
+          productDoc.stock = availableStock - cartItem.quantity
+        }
+      }
+
+      const items = cart.items.map((i) => ({
+        product: i.product._id,
+        name: i.product.name,
+        price: i.product.price,
+        quantity: i.quantity,
+        selectedOptions: i.selectedOptions || { color: '', size: '', waistSize: null },
+      }))
+      const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      let shippingAmount = 0
+      for (const cartItem of cart.items) {
+        const productDoc = productMap.get(cartItem.product._id.toString())
+        if (!productDoc) continue
+        const perUnit = unitShippingForProduct(productDoc, destKey)
+        shippingAmount += perUnit * cartItem.quantity
+      }
+
+      const qtyByProduct = new Map()
+      for (const i of cart.items) {
+        const id = i.product._id.toString()
+        qtyByProduct.set(id, (qtyByProduct.get(id) || 0) + (Number(i.quantity) || 0))
+      }
+      const { freeShippingMinQty } = shopSettings
+      const freeShippingQualified =
+        freeShippingMinQty != null &&
+        [...qtyByProduct.values()].some((q) => q >= freeShippingMinQty)
+      if (freeShippingQualified) {
+        shippingAmount = 0
+      }
+
+      const totalAmount = subtotal + shippingAmount
+
+      const [order] = await Order.create([{
+        user: req.user._id,
+        items,
+        totalAmount,
+        shippingAddress,
+        paymentMethod,
+        shippingDestination: destKey,
+        shippingAmount,
+        freeShippingQualified,
+      }], { session })
+      createdOrder = order
+
+      await Promise.all([...productMap.values()].map((productDoc) => productDoc.save({ session })))
+
+      cart.items = []
+      await cart.save({ session })
     })
-    const productMap = new Map(productDocs.map((p) => [p._id.toString(), p]))
 
-    for (const cartItem of cart.items) {
-      const productId = cartItem.product._id.toString()
-      const productDoc = productMap.get(productId)
-      if (!productDoc) {
-        return res.status(400).json({ success: false, message: `Product not found: ${productId}` })
-      }
-      const selectedOptions = normalizeSelectedOptions(cartItem.selectedOptions || {})
-      const variantKey = buildVariantKey(selectedOptions)
-      const variantIndex = (productDoc.variantStock || []).findIndex(
-        (entry) => buildVariantKey(entry) === variantKey
-      )
-      const availableStock = variantIndex >= 0
-        ? Number(productDoc.variantStock[variantIndex].stock) || 0
-        : Number(productDoc.stock) || 0
-
-      if (cartItem.quantity > availableStock) {
-        return res.status(400).json({
-          success: false,
-          message: `${productDoc.name} only has ${availableStock} item(s) available for selected variant`,
-        })
-      }
-
-      if (variantIndex >= 0) {
-        productDoc.variantStock[variantIndex].stock = availableStock - cartItem.quantity
-      } else {
-        productDoc.stock = availableStock - cartItem.quantity
-      }
-    }
-
-    const items = cart.items.map((i) => ({
-      product: i.product._id,
-      name: i.product.name,
-      price: i.product.price,
-      quantity: i.quantity,
-      selectedOptions: i.selectedOptions || { color: '', size: '', waistSize: null },
-    }))
-    const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-    let shippingAmount = 0
-    for (const cartItem of cart.items) {
-      const productDoc = productMap.get(cartItem.product._id.toString())
-      if (!productDoc) continue
-      const perUnit = unitShippingForProduct(productDoc, destKey)
-      shippingAmount += perUnit * cartItem.quantity
-    }
-    const totalAmount = subtotal + shippingAmount
-
-    const order = await Order.create({
-      user: req.user._id,
-      items,
-      totalAmount,
-      shippingAddress,
-      paymentMethod,
-      shippingDestination: destKey,
-      shippingAmount,
-    })
-
-    await Promise.all([...productMap.values()].map((productDoc) => productDoc.save()))
-
-    cart.items = []
-    await cart.save()
-
-    return res.status(201).json({ success: true, data: order })
+    return res.status(201).json({ success: true, data: createdOrder })
   } catch (error) {
+    if (error?.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message })
+    }
     return next(error)
+  } finally {
+    if (session) await session.endSession()
   }
 }
 

@@ -12,6 +12,8 @@ import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
+import shopSettingsRoutes from './routes/shopSettingsRoutes.js'
+import campaignBannerRoutes from './routes/campaignBannerRoutes.js'
 import { buildTrackingRoutes } from './routes/trackingRoutes.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { TrackingService } from './services/trackingService.js'
@@ -20,7 +22,7 @@ import { swaggerSpec } from './config/swagger.js'
 
 const app = express()
 
-if (process.env.VERCEL) {
+if (process.env.VERCEL || env.nodeEnv === 'production') {
   app.set('trust proxy', 1)
 }
 
@@ -59,6 +61,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/events', eventRoutes)
 app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/categories', categoryRoutes)
+app.use('/api/shop-settings', shopSettingsRoutes)
+app.use('/api/campaign-banners', campaignBannerRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)

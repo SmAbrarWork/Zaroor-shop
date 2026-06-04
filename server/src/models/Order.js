@@ -40,6 +40,8 @@ const orderSchema = new mongoose.Schema(
     shippingDestination: { type: String, default: null },
     /** Total shipping in PKR for this order. */
     shippingAmount: { type: Number, default: 0, min: 0 },
+    /** True when cart met admin “free shipping from X items” rule. */
+    freeShippingQualified: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

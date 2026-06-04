@@ -14,6 +14,13 @@ import {
   updateAdminCategory,
   deleteAdminCategory,
 } from '../controllers/adminCategoryController.js'
+import { getAdminShopSettings, updateShopSettings } from '../controllers/shopSettingsController.js'
+import {
+  listAdminCampaignBanners,
+  createCampaignBanner,
+  updateCampaignBanner,
+  deleteCampaignBanner,
+} from '../controllers/campaignBannerController.js'
 
 const router = Router()
 
@@ -43,5 +50,13 @@ router.delete('/events/:id', deleteEvent)
 
 router.get('/orders', getAdminOrders)
 router.put('/orders/:id/status', updateOrderStatus)
+
+router.get('/shop-settings', getAdminShopSettings)
+router.put('/shop-settings', updateShopSettings)
+
+router.get('/campaign-banners', listAdminCampaignBanners)
+router.post('/campaign-banners', createCampaignBanner)
+router.put('/campaign-banners/:id', updateCampaignBanner)
+router.delete('/campaign-banners/:id', deleteCampaignBanner)
 
 export default router

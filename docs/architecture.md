@@ -57,26 +57,33 @@ The server loads `.env` from disk via `dotenv` in `server/src/config/environment
 
 ## Deployment
 
-### Docker (EC2 / local)
+See **[deploy-hostinger.md](deploy-hostinger.md)** for the full Hostinger checklist (Nginx, DNS, SSL, env files).
+
+### Docker (Hostinger VPS)
+
+On the VPS:
 
 ```bash
-cp server/.env.example server/.env   # edit
-cp client/.env.example client/.env   # edit
+cp server/.env.production.example server/.env   # edit with real secrets
+# optional: cp .env.production.example .env     # VITE_* for client image build
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Vercel (serverless API)
+Configure **Nginx** on the host (`deploy/nginx/zaroor.shop.conf.example`) so `/` → client:3000 and `/api` → server:5000. Containers bind to `127.0.0.1` only.
 
-In the Vercel project, set **Root Directory** to `server`.  
-Build uses `server/vercel.json` and the serverless entry `server/api/index.js`.
+### One-command deploy (git push + VPS pull + compose)
 
-### One-command deploy (git + EC2 pull + compose)
-
-From repo root:
+From your machine, with `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, and `DEPLOY_REMOTE_DIR` set (see `.env.deploy.example`):
 
 ```bash
-bash scripts/deploy-remote.sh "your message"
+set -a && source ./.env.deploy && set +a
+./scripts/deploy-remote.sh "your message"
 ```
+
+### Vercel (optional serverless API)
+
+If you host the API on Vercel instead of the VPS, set **Root Directory** to `server`.  
+Build uses `server/vercel.json` and the serverless entry `server/api/index.js`.
 
 ---
 

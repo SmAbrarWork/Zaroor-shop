@@ -1,16 +1,10 @@
-services:
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-      target: production
-    env_file:
-      - ./client/.env
-    ports:
-      - '3000:3000'
-    depends_on:
-      - server
+# Production stack for Hostinger VPS.
+# Bind ports to localhost only — Nginx on the host terminates SSL and proxies:
+#   /     -> client:3000
+#   /api  -> server:5000
+# See deploy/nginx/zaroor.shop.conf.example and docs/deploy-hostinger.md
 
+services:
   server:
     build:
       context: ./server
@@ -19,4 +13,46 @@ services:
     env_file:
       - ./server/.env
     ports:
-      - '5000:5000'
+      - '127.0.0.1:5000:5000'
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:5000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_META_PIXEL_ID: ${VITE_META_PIXEL_ID:-}
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

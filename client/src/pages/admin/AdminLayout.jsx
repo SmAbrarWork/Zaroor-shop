@@ -10,6 +10,8 @@ const navItems = [
   { to: '/admin/categories', label: 'Categories', icon: '☰' },
   { to: '/admin/products', label: 'Products', icon: '◇' },
   { to: '/admin/orders', label: 'Orders', icon: '▤' },
+  { to: '/admin/shop-settings', label: 'Shop', icon: '⚙' },
+  { to: '/admin/campaign-banners', label: 'Banners', icon: '▣' },
 ]
 
 export default function AdminLayout() {

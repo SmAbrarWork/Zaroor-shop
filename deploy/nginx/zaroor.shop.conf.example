@@ -1,0 +1,30 @@
+# Nginx site for Zaroor Shop on Hostinger VPS.
+# Install: sudo apt install nginx certbot python3-certbot-nginx
+# Copy:    sudo cp deploy/nginx/zaroor.shop.conf.example /etc/nginx/sites-available/zaroor.shop
+# Enable:  sudo ln -s /etc/nginx/sites-available/zaroor.shop /etc/nginx/sites-enabled/
+# Test:     sudo nginx -t && sudo systemctl reload nginx
+# SSL:      sudo certbot --nginx -d zaroor.shop -d www.zaroor.shop
+
+server {
+    listen 80;
+    server_name zaroor.shop www.zaroor.shop;
+
+    # After certbot, this block is updated for HTTPS redirect.
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

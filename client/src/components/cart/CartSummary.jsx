@@ -1,8 +1,18 @@
 import { Link } from 'react-router-dom'
 import { formatCurrencyPKR } from '../../utils/dateUtils'
+import {
+  qualifiesFreeShippingSingleProduct,
+  minExtraUnitsForSingleProductFreeShipping,
+} from '../../utils/shipping.js'
 import Button from '../ui/Button'
 
-export default function CartSummary({ total, count, isAuthenticated }) {
+export default function CartSummary({ total, count, isAuthenticated, freeShippingMinQty = null, cartItems = [] }) {
+  const qualifies = qualifiesFreeShippingSingleProduct(cartItems, freeShippingMinQty)
+  const needMore =
+    freeShippingMinQty != null && !qualifies
+      ? minExtraUnitsForSingleProductFreeShipping(cartItems, freeShippingMinQty) ?? 0
+      : 0
+
   return (
     <div className="h-fit space-y-5 rounded-2xl border border-white/12 bg-[color-mix(in_srgb,var(--color-surface)_65%,transparent)] p-5 shadow-lg lg:sticky lg:top-24">
       <div>
@@ -16,7 +26,13 @@ export default function CartSummary({ total, count, isAuthenticated }) {
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-white/55">Shipping</span>
-          <span className="max-w-[55%] text-right text-xs font-medium text-white/55">Set at checkout by destination</span>
+          <span className="max-w-[55%] text-right text-xs font-medium text-white/55">
+            {qualifies
+              ? 'Free at checkout (promo)'
+              : needMore > 0
+                ? `Add ${needMore} more of one product (${freeShippingMinQty}+ same product)`
+                : 'Set at checkout by destination'}
+          </span>
         </div>
         <div className="border-t border-white/10 pt-4">
           <div className="flex justify-between gap-4 text-lg font-black">

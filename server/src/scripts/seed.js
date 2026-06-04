@@ -4,6 +4,8 @@ import { Event } from '../models/Event.js'
 import { Category } from '../models/Category.js'
 import { Product } from '../models/Product.js'
 import { User } from '../models/User.js'
+import { ShopSettings } from '../models/ShopSettings.js'
+import { CampaignBanner } from '../models/CampaignBanner.js'
 import { SHIPPING_DESTINATIONS } from '../constants/shippingDestinations.js'
 
 /**
@@ -677,6 +679,305 @@ const productDefs = [
       { color: 'Random', size: 'Large', waistSize: null, stock: 60 },
     ],
   },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'heritage-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Calligraphy Storm Tee',
+    slug: 'azadi-calligraphy-storm-tee',
+    productType: 'shirt',
+    price: 2190,
+    initialPrice: 2590,
+    discountedPrice: 2190,
+    discountPercent: 15,
+    image: IMG.tee2,
+    tags: ['azadi-day', 'graphic'],
+    stock: 42,
+    description: 'Urdu brush strokes over storm-grey base — museum wall energy.',
+    options: { colors: ['Storm', 'Bone'], sizes: ['Small', 'Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Storm', size: 'Small', waistSize: null, stock: 6 },
+      { color: 'Storm', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Storm', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Bone', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Bone', size: 'X-Large', waistSize: null, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'street-layers',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Parade Stripe Long Sleeve',
+    slug: 'azadi-parade-stripe-long-sleeve',
+    productType: 'shirt',
+    price: 2490,
+    initialPrice: 2490,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.tee3,
+    tags: ['azadi-day'],
+    stock: 33,
+    description: 'Vertical stripes with deep green sleeve blocks for layering under jackets.',
+    options: { colors: ['White', 'Forest'], sizes: ['Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'White', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'White', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Forest', size: 'Medium', waistSize: null, stock: 8 },
+      { color: 'Forest', size: 'Large', waistSize: null, stock: 7 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'featured-graphics',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Victory Green Boxy Tee',
+    slug: 'azadi-victory-green-boxy-tee',
+    productType: 'shirt',
+    price: 2090,
+    initialPrice: 2390,
+    discountedPrice: 2090,
+    discountPercent: 13,
+    image: IMG.urban,
+    tags: ['azadi-day'],
+    stock: 55,
+    description: 'Dropped shoulder box fit with oversized chest hit.',
+    options: { colors: ['Victory Green', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Victory Green', size: 'Small', waistSize: null, stock: 10 },
+      { color: 'Victory Green', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Victory Green', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'heritage-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Monochrome Minar Tee',
+    slug: 'azadi-monochrome-minar-tee',
+    productType: 'shirt',
+    price: 2290,
+    initialPrice: 2790,
+    discountedPrice: 2290,
+    discountPercent: 18,
+    image: IMG.street,
+    tags: ['azadi-day'],
+    stock: 38,
+    description: 'High-contrast monument line art for night markets.',
+    options: { colors: ['Black', 'Concrete'], sizes: ['Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Concrete', size: 'Large', waistSize: null, stock: 9 },
+      { color: 'Concrete', size: 'X-Large', waistSize: null, stock: 9 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'hero-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Vaporwave Stack Tee',
+    slug: 'anime-vaporwave-stack-tee',
+    productType: 'shirt',
+    price: 2390,
+    initialPrice: 2890,
+    discountedPrice: 2390,
+    discountPercent: 17,
+    image: IMG.anime2,
+    tags: ['anime-merch'],
+    stock: 48,
+    description: 'Sunset gradient stack with chrome outline typography.',
+    options: { colors: ['Purple Haze', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Purple Haze', size: 'Small', waistSize: null, stock: 8 },
+      { color: 'Purple Haze', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Purple Haze', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 8 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'night-market',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Kanji Heavyweight Tee',
+    slug: 'anime-kanji-heavyweight-tee',
+    productType: 'shirt',
+    price: 2590,
+    initialPrice: 2590,
+    discountedPrice: null,
+    discountPercent: null,
+    image: IMG.anime3,
+    tags: ['anime-merch'],
+    stock: 40,
+    description: 'Thick cotton with raised ink kanji panel — night-market exclusive.',
+    options: { colors: ['Ink', 'Ash'], sizes: ['Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Ink', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Ink', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Ash', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Ash', size: 'X-Large', waistSize: null, stock: 10 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'studio-collectors',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Stadium Night Glow Tee',
+    slug: 'anime-stadium-night-glow-tee',
+    productType: 'shirt',
+    price: 2890,
+    initialPrice: 3390,
+    discountedPrice: 2890,
+    discountPercent: 15,
+    image: IMG.anime1,
+    tags: ['anime-merch'],
+    stock: 28,
+    description: 'Stadium lights halation print with soft-touch finish.',
+    options: { colors: ['Navy', 'Neon Mint'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Navy', size: 'Small', waistSize: null, stock: 6 },
+      { color: 'Navy', size: 'Medium', waistSize: null, stock: 8 },
+      { color: 'Navy', size: 'Large', waistSize: null, stock: 6 },
+      { color: 'Neon Mint', size: 'Medium', waistSize: null, stock: 4 },
+      { color: 'Neon Mint', size: 'Large', waistSize: null, stock: 4 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'hero-tees',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Chibi Power Stack Tee',
+    slug: 'anime-chibi-power-stack-tee',
+    productType: 'shirt',
+    price: 1990,
+    initialPrice: 2290,
+    discountedPrice: 1990,
+    discountPercent: 13,
+    image: IMG.urban,
+    tags: ['anime-merch'],
+    stock: 62,
+    description: 'Stacked chibi portraits with comic halftone background.',
+    options: { colors: ['White', 'Charcoal'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'White', size: 'Small', waistSize: null, stock: 12 },
+      { color: 'White', size: 'Medium', waistSize: null, stock: 14 },
+      { color: 'White', size: 'Large', waistSize: null, stock: 12 },
+      { color: 'Charcoal', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Charcoal', size: 'Large', waistSize: null, stock: 12 },
+    ],
+  },
+  {
+    eventSlug: 'anime-merch',
+    categorySlug: 'night-market',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'RGB Kanji Fade Tee',
+    slug: 'anime-rgb-kanji-fade-tee',
+    productType: 'shirt',
+    price: 2690,
+    initialPrice: 2990,
+    discountedPrice: 2690,
+    discountPercent: 10,
+    image: IMG.street,
+    tags: ['anime-merch'],
+    stock: 35,
+    description: 'RGB split kanji with soft fade wash — limited colour run.',
+    options: { colors: ['Black', 'Electric Blue'], sizes: ['Medium', 'Large', 'X-Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'Black', size: 'Medium', waistSize: null, stock: 10 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 10 },
+      { color: 'Electric Blue', size: 'Large', waistSize: null, stock: 8 },
+      { color: 'Electric Blue', size: 'X-Large', waistSize: null, stock: 7 },
+    ],
+  },
+  {
+    eventSlug: 'azadi-day',
+    categorySlug: 'featured-graphics',
+    isHotDrop: false,
+    hotDropOrder: 0,
+    name: 'Liberty Script Tee',
+    slug: 'azadi-liberty-script-tee',
+    productType: 'shirt',
+    price: 1890,
+    initialPrice: 2190,
+    discountedPrice: 1890,
+    discountPercent: 14,
+    image: IMG.tee1,
+    tags: ['azadi-day'],
+    stock: 58,
+    description: 'Flowing liberty script with micro star scatter.',
+    options: { colors: ['White', 'Olive', 'Black'], sizes: ['Small', 'Medium', 'Large'], waistSizes: [] },
+    variantStock: [
+      { color: 'White', size: 'Small', waistSize: null, stock: 10 },
+      { color: 'Olive', size: 'Medium', waistSize: null, stock: 12 },
+      { color: 'Black', size: 'Large', waistSize: null, stock: 12 },
+    ],
+  },
+]
+
+/** Promo slides for home carousel — per event. */
+const campaignBannerDefs = [
+  {
+    eventSlug: 'azadi-day',
+    eyebrow: 'Campaign spotlight',
+    title: 'Wear the national drop like a headline',
+    subtitle: 'Glass panels, bold type, and smooth fades—built for campaign commerce that feels flagship.',
+    image: IMG.tee1,
+    ctaLabel: 'Browse categories',
+    ctaHref: '/shop/all',
+    sortOrder: 0,
+    enabled: true,
+    glassStyle: 'heavy',
+    textAnimation: 'fadeUp',
+  },
+  {
+    eventSlug: 'azadi-day',
+    eyebrow: 'COD · nationwide',
+    title: 'Pay when it arrives',
+    subtitle: 'Streetwear that reads premium and closes the sale with trust-first checkout.',
+    image: IMG.street,
+    ctaLabel: 'View shirts',
+    ctaHref: '/shop/shirts',
+    sortOrder: 1,
+    enabled: true,
+    glassStyle: 'medium',
+    textAnimation: 'slideRight',
+  },
+  {
+    eventSlug: 'anime-merch',
+    eyebrow: 'Live festival',
+    title: 'Neon aisles. Midnight prints.',
+    subtitle: 'Shopify-grade storytelling with WordPress-smooth motion—slides that sell the vibe.',
+    image: IMG.anime1,
+    ctaLabel: 'Browse categories',
+    ctaHref: '/shop/all',
+    sortOrder: 0,
+    enabled: true,
+    glassStyle: 'heavy',
+    textAnimation: 'fadeUp',
+  },
+  {
+    eventSlug: 'anime-merch',
+    eyebrow: 'Limited stock',
+    title: 'Collectors queue early',
+    subtitle: 'Variant-aware inventory, glass overlays, and a carousel that keeps attention on the drop.',
+    image: IMG.anime3,
+    ctaLabel: 'Jump to hot drops',
+    ctaHref: '/#shop-hot-drops',
+    sortOrder: 1,
+    enabled: true,
+    glassStyle: 'light',
+    textAnimation: 'fade',
+  },
 ]
 
 async function seed() {
@@ -686,6 +987,7 @@ async function seed() {
 
     await Product.deleteMany({})
     await Category.deleteMany({})
+    await CampaignBanner.deleteMany({})
     await Event.deleteMany({})
 
     const insertedEvents = await Event.insertMany(events)
@@ -727,6 +1029,16 @@ async function seed() {
 
     const insertedProducts = await Product.insertMany(productsWithRefs)
 
+    const bannersToInsert = campaignBannerDefs
+      .map((b) => {
+        const ev = eventBySlug.get(b.eventSlug)
+        if (!ev?._id) return null
+        const { eventSlug: _es, ...rest } = b
+        return { ...rest, event: ev._id }
+      })
+      .filter(Boolean)
+    if (bannersToInsert.length) await CampaignBanner.insertMany(bannersToInsert)
+
     // Seed admin user (upsert so re-running is safe)
     const adminEmail = 'zaroor.shop1@gmail.com'
     const existingAdmin = await User.findOne({ email: adminEmail })
@@ -739,10 +1051,27 @@ async function seed() {
       console.log('Admin user already exists, role ensured')
     }
 
+    await ShopSettings.findOneAndUpdate(
+      { key: 'default' },
+      {
+        $set: {
+          freeShippingMinQty: 4,
+          paymentMethods: {
+            cod: true,
+            jazzcash: false,
+            easypaisa: false,
+          },
+        },
+      },
+      { upsert: true, new: true }
+    )
+    console.log('Shop settings: free shipping when any product has 4+ units in the bag')
+
     const hotCount = productsWithRefs.filter((p) => p.isHotDrop).length
     console.log(`Seeded ${insertedEvents.length} events`)
     console.log(`Seeded ${insertedCategories.length} categories`)
     console.log(`Seeded ${insertedProducts.length} products (${hotCount} hot drops)`)
+    console.log(`Seeded ${bannersToInsert.length} campaign banners`)
 
     await mongoose.disconnect()
     console.log('Done')

@@ -2,36 +2,34 @@ import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAppSelector } from '../app/hooks'
 import { selectActiveEvent } from '../features/event/eventSelectors'
-import { selectCategories } from '../features/categories/categorySelectors'
 import { selectFilteredProducts } from '../features/products/productSelectors'
 import ProductGrid from '../components/dynamic/ProductGrid'
 
 export default function CategoryBrowse() {
   const { categorySlug } = useParams()
   const activeEvent = useAppSelector(selectActiveEvent)
-  const categories = useAppSelector(selectCategories)
   const filtered = useAppSelector(selectFilteredProducts)
 
   const { title, subtitle, products } = useMemo(() => {
     if (!categorySlug) {
       return { title: 'Shop', subtitle: '', products: [] }
     }
-    if (categorySlug === 'all') {
-      const list = [...filtered].sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    if (categorySlug === 'shirts') {
+      const list = filtered
+        .filter((p) => p.productType === 'shirt')
+        .sort((a, b) => String(a.name).localeCompare(String(b.name)))
       return {
-        title: 'Full catalog',
-        subtitle: `Everything in ${activeEvent?.name ?? 'this campaign'} — browse every piece.`,
+        title: 'Shirts',
+        subtitle: `Shirts only for ${activeEvent?.name ?? 'this campaign'}.`,
         products: list,
       }
     }
-    const cat = categories.find((c) => c.slug === categorySlug)
-    const list = filtered.filter((p) => (p.category?.slug || '') === categorySlug)
     return {
-      title: cat?.name ?? categorySlug.replace(/-/g, ' '),
-      subtitle: cat?.description ?? '',
-      products: list,
+      title: 'Shirts',
+      subtitle: '',
+      products: [],
     }
-  }, [categorySlug, filtered, categories, activeEvent?.name])
+  }, [categorySlug, filtered, activeEvent?.name])
 
   if (!activeEvent) {
     return (
@@ -52,10 +50,10 @@ export default function CategoryBrowse() {
         </h1>
         {subtitle ? (
           <p className="mt-2 max-w-2xl text-sm">
-            {categorySlug === 'all' ? (
+            {categorySlug === 'shirts' ? (
               <>
-                <strong className="font-bold text-white/90">Full catalog</strong>
-                <span className="text-white/60"> — everything in this campaign in one scrollable grid.</span>
+                <strong className="font-bold text-white/90">Shirts only</strong>
+                <span className="text-white/60"> — browse all available shirts in this campaign.</span>
               </>
             ) : (
               <strong className="font-semibold text-white/75">{subtitle}</strong>
