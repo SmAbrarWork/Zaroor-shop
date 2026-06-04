@@ -56,7 +56,11 @@ const trackingLimiter = rateLimit({
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy' })
 })
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+// API docs only in non-production (not exposed on Hostinger)
+if (env.nodeEnv !== 'production') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+}
 
 app.use('/api/events', eventRoutes)
 app.use('/api/auth', authLimiter, authRoutes)

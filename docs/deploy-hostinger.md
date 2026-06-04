@@ -398,24 +398,21 @@ Must match `GOOGLE_CALLBACK_URL` in `server/.env`.
 
 # Part 13 — Deploy updates later (every new release)
 
-## On your computer
+**Recommended:** push to `main` and let GitHub Actions deploy automatically.  
+See **[deploy-automation.md](deploy-automation.md)** for secrets setup.
+
+## On your computer (manual)
 
 ```bash
-cd /path/to/Zaroor-shop
-git add -A
-git commit -m "Describe your change"
-git push origin main
+set -a && source ./.env.deploy && set +a
+./scripts/deploy-push.sh "Describe your change"
 ```
 
-## On the VPS
+## On the VPS only
 
 ```bash
-ssh -i ~/.ssh/hostinger_vps YOUR_SSH_USER@YOUR_VPS_IP
 cd /var/www/Zaroor-shop
-git pull origin main
-docker compose -f docker-compose.yml up --build -d
-docker compose -f docker-compose.yml ps
-curl -s https://zaroor.shop/api/health
+./scripts/deploy-vps.sh
 ```
 
 If you changed `VITE_*` in root `.env`, the `up --build` step rebuilds the client image automatically.

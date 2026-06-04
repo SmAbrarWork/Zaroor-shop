@@ -6,21 +6,26 @@ This repository is set up for **Hostinger VPS deployment** with Docker. There is
 
 ## Deploy on Hostinger VPS
 
-**Full step-by-step guide:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)
+**First-time setup:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)  
+**Auto-deploy on push to `main`:** [docs/deploy-automation.md](docs/deploy-automation.md)
 
-1. **Your PC:** push `main` to GitHub
-2. **VPS:** clone → `cp server/.env.example server/.env` → edit secrets → Nginx → DNS → `docker compose up --build -d` → Certbot SSL
-3. **Updates:** `git pull` && `docker compose up --build -d`
+1. **VPS (once):** clone → `server/.env` → Nginx → DNS → `docker compose up --build -d` → Certbot
+2. **GitHub (once):** add Actions secrets → every **`git push origin main`** deploys automatically
+3. **Or laptop:** `./scripts/deploy-push.sh "your message"`
 
-You need **`server/.env`** and **Nginx** on the VPS. There is no `client/.env` in the repo—browser tracking IDs (`VITE_*`) go in the repo root **`.env`** when you enable Meta/GA (see [marketing-tracking.md](docs/marketing-tracking.md)).
+You need **`server/.env`** and **Nginx** on the VPS. Browser `VITE_*` vars use repo root **`.env`** when needed ([marketing-tracking.md](docs/marketing-tracking.md)).
 
-### Optional: deploy from your laptop
+### Deploy from your laptop
 
 ```bash
 cp .env.deploy.example .env.deploy   # edit DEPLOY_*
 set -a && source ./.env.deploy && set +a
-./scripts/deploy-remote.sh "your message"
+./scripts/deploy-push.sh "your message"
 ```
+
+### Auto-deploy (GitHub Actions)
+
+Push to **`main`** runs `.github/workflows/deploy-hostinger.yml` → VPS runs `scripts/deploy-vps.sh` (pull, rebuild, health check).
 
 ### Optional: Vite build variables (Meta, GA, Google login)
 
@@ -32,6 +37,7 @@ cp .env.production.example .env   # on VPS, only if you need custom VITE_* at bu
 
 - [Architecture & API](docs/architecture.md)
 - [Hostinger VPS deploy (step-by-step)](docs/deploy-hostinger.md)
+- [Auto-deploy GitHub → Hostinger](docs/deploy-automation.md)
 - [Meta Pixel & GA4 setup](docs/marketing-tracking.md)
 
 ## Configuration
