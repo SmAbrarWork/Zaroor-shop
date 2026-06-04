@@ -12,7 +12,7 @@ This repository is set up for **Hostinger VPS deployment** with Docker. There is
 2. **VPS:** clone → `cp server/.env.example server/.env` → edit secrets → Nginx → DNS → `docker compose up --build -d` → Certbot SSL
 3. **Updates:** `git pull` && `docker compose up --build -d`
 
-You need **`server/.env`** and **Nginx** on the VPS. You do **not** need `client/.env`.
+You need **`server/.env`** and **Nginx** on the VPS. There is no `client/.env` in the repo—browser tracking IDs (`VITE_*`) go in the repo root **`.env`** when you enable Meta/GA (see [marketing-tracking.md](docs/marketing-tracking.md)).
 
 ### Optional: deploy from your laptop
 
@@ -32,6 +32,7 @@ cp .env.production.example .env   # on VPS, only if you need custom VITE_* at bu
 
 - [Architecture & API](docs/architecture.md)
 - [Hostinger VPS deploy (step-by-step)](docs/deploy-hostinger.md)
+- [Meta Pixel & GA4 setup](docs/marketing-tracking.md)
 
 ## Configuration
 

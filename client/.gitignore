@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Vite env files — use repo root `.env` for Docker builds (VITE_* build args).
+# For local `npm run dev` only, you may create client/.env locally (never commit).
+.env
+.env.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

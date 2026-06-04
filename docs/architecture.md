@@ -90,5 +90,8 @@ set -a && source ./.env.deploy && set +a
 
 ## Marketing
 
-- **Meta:** client pixel (`VITE_*` build args); server Conversions API (`META_*` in `server/.env`).
-- **GA4:** client gtag (`VITE_*`); server Measurement Protocol (`GA4_*`).
+See **[marketing-tracking.md](marketing-tracking.md)** for enabling Meta Pixel and GA4 on the VPS.
+
+- **Meta (browser):** `VITE_META_PIXEL_ID` in root `.env` → `client/src/utils/tracking.js`
+- **Meta (server):** `META_PIXEL_ID`, `META_CONVERSIONS_TOKEN` in `server/.env` → Conversions API
+- **GA4:** `VITE_GA_MEASUREMENT_ID` (build) + `GA4_*` in `server/.env` (optional server events)

@@ -219,7 +219,7 @@ nano .env
 
 Fill `VITE_META_PIXEL_ID`, `VITE_GA_MEASUREMENT_ID`, `VITE_GOOGLE_CLIENT_ID` if needed.
 
-If you skip this step, the shop still works; tracking/OAuth UI keys may be empty until you add them and rebuild.
+If you skip this step, the shop still works; tracking/OAuth UI keys may be empty until you add them and rebuild. See **[marketing-tracking.md](marketing-tracking.md)** for Meta Pixel / GA4 details.
 
 ---
 
