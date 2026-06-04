@@ -19,7 +19,7 @@ function Cta({ label, href }) {
   if (!label?.trim()) return null
   const isExternal = /^https?:\/\//i.test(href)
   const className =
-    'inline-flex min-h-[44px] items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] px-6 text-sm font-bold text-[var(--color-text)] shadow-[0_10px_40px_-12px_color-mix(in_srgb,var(--color-accent)_45%,transparent)] transition-transform hover:-translate-y-px'
+    'mx-auto inline-flex min-h-[44px] items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] px-6 text-sm font-bold text-[var(--color-text)] shadow-[0_10px_40px_-12px_color-mix(in_srgb,var(--color-accent)_45%,transparent)] transition-transform hover:-translate-y-px sm:mx-0'
   if (isExternal) {
     return (
       <a href={href} target="_blank" rel="noreferrer" className={className}>
@@ -34,7 +34,7 @@ function Cta({ label, href }) {
   )
 }
 
-export default function CampaignBannerCarousel({ banners = [] }) {
+export default function CampaignBannerCarousel({ banners = [], mobileHero = false, className = '' }) {
   const reduceMotion = useReducedMotion()
   const slides = useMemo(() => banners.filter((b) => b.enabled !== false && b.image && b.title), [banners])
   const [index, setIndex] = useState(0)
@@ -60,43 +60,51 @@ export default function CampaignBannerCarousel({ banners = [] }) {
   const panelTransition = reduceMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
   const textTransition = (delay) => (reduceMotion ? { duration: 0 } : { duration: 0.55, delay: delay ?? 0 })
 
+  const sectionClass = mobileHero
+    ? `relative h-full w-full overflow-hidden ${className}`
+    : `relative overflow-hidden rounded-none border-0 shadow-none sm:rounded-[2rem] sm:border sm:border-white/12 sm:shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)] ${className}`
+
+  const frameClass = mobileHero
+    ? 'relative h-full min-h-0 w-full'
+    : 'relative aspect-[4/5] min-h-[280px] w-full sm:aspect-[21/9] sm:min-h-[260px] lg:aspect-[24/9] lg:min-h-[300px]'
+
   return (
-    <section aria-label="Promotional banners" className="relative overflow-hidden rounded-[2rem] border border-white/12 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.45)]">
-      <div className="relative aspect-[21/9] min-h-[220px] w-full sm:min-h-[260px] lg:aspect-[24/9] lg:min-h-[300px]">
+    <section aria-label="Promotional banners" className={sectionClass}>
+      <div className={frameClass}>
         <AnimatePresence mode="wait">
           <motion.div
             key={current._id}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 1.04 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.02 }}
             transition={bgTransition}
             className="absolute inset-0"
           >
             <SafeProductImage
               src={current.image}
               alt=""
-              imgClassName="h-full w-full object-cover scale-[1.02] motion-reduce:scale-100"
+              imgClassName="h-full w-full object-cover motion-reduce:scale-100"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10 sm:from-black/70 sm:via-black/35" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,color-mix(in_srgb,var(--color-accent)_22%,transparent),transparent_55%)] opacity-90" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/15 sm:bg-gradient-to-r sm:from-black/75 sm:via-black/45 sm:to-black/10 lg:from-black/70 lg:via-black/35" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_85%,color-mix(in_srgb,var(--color-accent)_28%,transparent),transparent_58%)] opacity-95 sm:bg-[radial-gradient(ellipse_at_20%_50%,color-mix(in_srgb,var(--color-accent)_22%,transparent),transparent_55%)] sm:opacity-90" />
           </motion.div>
         </AnimatePresence>
 
-        <div className="absolute inset-0 flex items-end p-4 sm:items-center sm:p-8 lg:p-10">
+        <div className="absolute inset-0 flex items-end justify-center p-4 pb-10 text-center sm:items-center sm:justify-start sm:p-8 sm:pb-8 sm:text-left lg:p-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={current._id + '-panel'}
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+              exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
               transition={panelTransition}
-              className={`max-w-xl rounded-2xl p-5 sm:p-7 ${glass}`}
+              className={`w-full max-w-lg px-1 sm:max-w-xl sm:rounded-2xl sm:p-7 ${glass} max-sm:border-0 max-sm:bg-transparent max-sm:p-0 max-sm:shadow-none max-sm:backdrop-blur-none`}
             >
               {current.eyebrow ? (
                 <motion.p
                   {...(reduceMotion ? { initial: false, animate: { opacity: 1, y: 0, x: 0 } } : tv)}
                   transition={textTransition(0.05)}
-                  className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/75"
+                  className="text-[10px] font-bold uppercase tracking-[0.26em] text-white/80 sm:text-[11px] sm:tracking-[0.28em] sm:text-white/75"
                 >
                   {current.eyebrow}
                 </motion.p>
@@ -104,7 +112,7 @@ export default function CampaignBannerCarousel({ banners = [] }) {
               <motion.h2
                 {...(reduceMotion ? { initial: false, animate: { opacity: 1, y: 0, x: 0 } } : tv)}
                 transition={reduceMotion ? { duration: 0 } : { duration: 0.6, delay: 0.1 }}
-                className="mt-2 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl lg:text-4xl"
+                className="mt-2 text-[1.65rem] font-black leading-[1.08] tracking-tight text-white sm:text-3xl lg:text-4xl"
               >
                 {current.title}
               </motion.h2>
@@ -112,7 +120,7 @@ export default function CampaignBannerCarousel({ banners = [] }) {
                 <motion.p
                   {...(reduceMotion ? { initial: false, animate: { opacity: 1, y: 0, x: 0 } } : tv)}
                   transition={reduceMotion ? { duration: 0 } : { duration: 0.55, delay: 0.18 }}
-                  className="mt-3 text-sm leading-relaxed text-white/80 sm:text-base"
+                  className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:mx-0 sm:max-w-none sm:text-base sm:text-white/80"
                 >
                   {current.subtitle}
                 </motion.p>
@@ -121,7 +129,7 @@ export default function CampaignBannerCarousel({ banners = [] }) {
                 initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={reduceMotion ? { duration: 0 } : { duration: 0.45, delay: 0.28 }}
-                className="mt-5 flex flex-wrap items-center gap-3"
+                className="mt-5 flex flex-wrap items-center justify-center gap-3 sm:justify-start"
               >
                 <Cta label={current.ctaLabel} href={current.ctaHref} />
               </motion.div>
@@ -138,7 +146,7 @@ export default function CampaignBannerCarousel({ banners = [] }) {
               type="button"
               aria-label={`Go to slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`h-2 rounded-full transition-all ${i === index ? 'w-8 bg-[var(--color-accent)]' : 'w-2 bg-white/35 hover:bg-white/55'}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ease-out sm:h-2 ${i === index ? 'w-7 bg-[var(--color-accent)] sm:w-8' : 'w-1.5 bg-white/35 hover:bg-white/55 sm:w-2'}`}
             />
           ))}
         </div>

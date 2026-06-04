@@ -52,12 +52,12 @@ export default function CategoryBrowse() {
 
   return (
     <div className="space-y-6 pb-10">
-      <div className="border-b border-white/10 pb-4">
+      <div className="border-b border-white/10 pb-4 text-center sm:text-left">
         <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/55">{activeEvent.name}</p>
         <h1 className="mt-1 text-2xl font-black tracking-tight text-[var(--color-text)] capitalize sm:text-3xl">
           {title}
         </h1>
-        {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">{subtitle}</p> : null}
+        {subtitle ? <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-white/60 sm:mx-0">{subtitle}</p> : null}
       </div>
 
       {empty ? (

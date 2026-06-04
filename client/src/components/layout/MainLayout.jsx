@@ -38,13 +38,13 @@ export default function MainLayout() {
     <div className="min-h-screen bg-[var(--color-primary)] text-[var(--color-text)] transition-[background-color,color] duration-500 ease-out">
       <Navbar />
       {showShopNav ? (
-        <div className="border-b border-white/10 bg-[color-mix(in_srgb,var(--color-primary)_88%,black)]/90 backdrop-blur-md">
-          <div className="mx-auto max-w-7xl px-3 py-2.5 sm:px-4">
+        <div className="sticky top-[var(--site-header-h)] z-40 bg-[var(--color-primary)]/95 backdrop-blur-xl sm:border-b sm:border-white/10 sm:bg-[color-mix(in_srgb,var(--color-primary)_88%,black)]/90">
+          <div className="mx-auto max-w-7xl py-2 sm:px-4 sm:py-2.5">
             <ShopCategoryNav />
           </div>
         </div>
       ) : null}
-      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8">
+      <main className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8 max-md:overflow-x-clip">
         <AnimatePresence mode="wait">
           <PageTransition pathname={location.pathname}>
             <Outlet />

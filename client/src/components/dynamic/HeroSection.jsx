@@ -13,8 +13,8 @@ export default function HeroSection({ event }) {
   }
 
   return (
-    <section className="grid items-end gap-6 lg:grid-cols-[1.2fr_0.8fr] xl:gap-8">
-      <div className="space-y-6">
+    <section className="grid items-end gap-6 text-center sm:text-left lg:grid-cols-[1.2fr_0.8fr] xl:gap-8">
+      <div className="mx-auto flex max-w-xl flex-col items-center space-y-6 sm:mx-0 sm:max-w-none sm:items-start">
         <Badge>Limited Drop</Badge>
         <MotionHeading
           initial={{ opacity: 0, y: 16 }}
@@ -36,7 +36,7 @@ export default function HeroSection({ event }) {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.45 }}
-        className="relative h-56 overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--color-surface)] sm:h-72"
+        className="relative mx-auto h-56 w-full max-w-md overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--color-surface)] sm:mx-0 sm:max-w-none sm:h-72"
       >
         <div className="absolute inset-0">
           {event.heroImage ? (
@@ -50,7 +50,7 @@ export default function HeroSection({ event }) {
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
-        <div className="absolute bottom-6 left-6 right-6">
+        <div className="absolute inset-x-0 bottom-0 p-5 text-center sm:bottom-6 sm:left-6 sm:right-6 sm:text-left">
           <p className="text-xs uppercase tracking-[0.3em] text-white/70">Campaign Focus</p>
           <p className="mt-2 text-xl font-bold sm:text-2xl">{event.campaignFocus || 'Urgency. Emotion. Action.'}</p>
         </div>

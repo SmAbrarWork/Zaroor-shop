@@ -38,7 +38,7 @@ export default function ProductGrid({ products, layout = 'grid' }) {
     return percent > 0 ? percent : null
   }
 
-  const renderCard = (product, index) => {
+  const renderCard = (product, index, { strip = false } = {}) => {
     const discountPercent = getDiscountPercent(product)
     return (
       <MotionDiv
@@ -47,7 +47,7 @@ export default function ProductGrid({ products, layout = 'grid' }) {
         transition={{ delay: index * 0.05 }}
         className="h-full"
       >
-        <Card className="flex h-full flex-col p-3 sm:p-4">
+        <Card className={`flex h-full flex-col p-3 sm:p-4 ${strip ? 'max-sm:border-0 max-sm:bg-white/[0.04] max-sm:shadow-none' : ''}`}>
           <Link to={`/product/${product._id || product.id}`} className="group flex min-h-0 flex-1 flex-col gap-3">
             <ProductImage src={product.image} alt={product.name} />
             <div className="flex min-h-0 flex-1 flex-col gap-2 px-0.5">
@@ -80,14 +80,14 @@ export default function ProductGrid({ products, layout = 'grid' }) {
     return (
       <section
         aria-label="Featured products"
-        className="-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-3 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 md:gap-5"
+        className="relative left-1/2 flex w-screen max-w-[100vw] -translate-x-1/2 snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-3 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [scroll-padding-inline:0.75rem] sm:static sm:w-auto sm:max-w-none sm:translate-x-0 sm:gap-4 sm:px-0.5 md:gap-5"
       >
         {products.map((product, index) => (
           <div
             key={product._id || product.id}
-            className="w-[min(78vw,300px)] shrink-0 snap-start sm:w-[272px] md:w-[288px] lg:w-[304px]"
+            className="w-[min(72vw,280px)] shrink-0 snap-start sm:w-[272px] md:w-[288px] lg:w-[304px]"
           >
-            {renderCard(product, index)}
+            {renderCard(product, index, { strip: true })}
           </div>
         ))}
       </section>

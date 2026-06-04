@@ -28,6 +28,10 @@
   --color-text: #ffffff;
   --color-surface: #0f172a;
   --commerce-glow: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --site-header-h: 3.25rem;
+  --shop-nav-h: 2.75rem;
+  --site-sticky-top: calc(var(--site-header-h) + var(--shop-nav-h));
+  --mobile-hero-h: min(72vh, 34rem);
   /**
    * Buttons on accent fills: pick readable fg from accent luminance.
    * Updated whenever applyEventTheme runs (utils/themeEngine.js).
