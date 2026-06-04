@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../utils/api'
 import { ADMIN_INPUT, ADMIN_SELECT } from '../../utils/adminClasses.js'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminTableWrap from '../../components/admin/AdminTableWrap.jsx'
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([])
@@ -41,24 +43,23 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">Users ({pagination.total})</h2>
+      <AdminPageHeader title="Users" count={pagination.total}>
         <input
           type="text"
           value={search}
           onChange={handleSearch}
           placeholder="Search by name or email..."
-          className={`${ADMIN_INPUT} w-full max-w-xs`}
+          className={`${ADMIN_INPUT} w-full sm:max-w-xs`}
         />
-      </div>
+      </AdminPageHeader>
 
       {loading ? (
         <p className="text-sm text-white/50">Loading...</p>
       ) : users.length === 0 ? (
         <p className="text-sm text-white/40">No users found</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full text-left text-sm">
+        <AdminTableWrap>
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b border-white/10 bg-white/5 text-xs text-white/50">
               <tr>
                 <th className="px-4 py-2">Name</th>
@@ -95,7 +96,7 @@ export default function AdminUsers() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableWrap>
       )}
 
       {pagination.pages > 1 && (

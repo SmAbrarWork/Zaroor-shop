@@ -56,7 +56,7 @@ export default function AdminShopSettings() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h2 className="text-xl font-bold">Shop settings</h2>
+        <h2 className="text-lg font-bold sm:text-xl">Shop settings</h2>
         <p className="mt-1 text-sm text-white/50">
           Store-wide rules for checkout. Shipping is normally per product × zone unless a product hits the free-shipping quantity below.
         </p>

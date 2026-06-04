@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import api from '../../utils/api'
-import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA } from '../../utils/adminClasses.js'
+import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA, ADMIN_BTN_PRIMARY, ADMIN_BTN_SECONDARY } from '../../utils/adminClasses.js'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminTableWrap from '../../components/admin/AdminTableWrap.jsx'
 
 const emptyEvent = {
   name: '',
@@ -91,15 +93,15 @@ export default function AdminEvents() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">Events ({events.length})</h2>
+      <AdminPageHeader title="Events" count={events.length}>
         <button
+          type="button"
           onClick={() => { setShowForm(!showForm); setEditing(null); setForm(emptyEvent) }}
-          className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+          className={ADMIN_BTN_SECONDARY}
         >
           {showForm ? 'Cancel' : '+ Add Event'}
         </button>
-      </div>
+      </AdminPageHeader>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/15 bg-slate-900/40 p-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -125,14 +127,14 @@ export default function AdminEvents() {
             <label className="flex items-center gap-1 text-xs text-white/50">Text<input type="color" value={form.theme.text} onChange={(e) => setForm({ ...form, theme: { ...form.theme, text: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
             <label className="flex items-center gap-1 text-xs text-white/50">Surface<input type="color" value={form.theme.surface} onChange={(e) => setForm({ ...form, theme: { ...form.theme, surface: e.target.value } })} className="h-7 w-7 cursor-pointer rounded border-0 bg-transparent" /></label>
           </div>
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2 xl:col-span-3">
+          <button type="submit" className={`${ADMIN_BTN_PRIMARY} sm:col-span-2 xl:col-span-3`}>
             {editing ? 'Update Event' : 'Create Event'}
           </button>
         </form>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10">
-        <table className="w-full text-left text-sm">
+      <AdminTableWrap>
+        <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="border-b border-white/10 bg-white/5 text-xs text-white/50">
             <tr>
               <th className="px-4 py-2">Name</th>
@@ -163,7 +165,7 @@ export default function AdminEvents() {
             ))}
           </tbody>
         </table>
-      </div>
+      </AdminTableWrap>
     </div>
   )
 }

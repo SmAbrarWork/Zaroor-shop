@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import api from '../../utils/api'
 import { formatCurrencyPKR } from '../../utils/dateUtils'
-import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA } from '../../utils/adminClasses.js'
+import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA, ADMIN_BTN_PRIMARY, ADMIN_BTN_SECONDARY } from '../../utils/adminClasses.js'
 import { SHIPPING_DESTINATIONS } from '../../constants/shippingDestinations.js'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminTableWrap from '../../components/admin/AdminTableWrap.jsx'
 
 const emptyShippingByDest = () =>
   Object.fromEntries(SHIPPING_DESTINATIONS.map((d) => [d.key, '']))
@@ -296,18 +298,18 @@ export default function AdminProducts() {
           </li>
         </ol>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">Products ({products.length})</h2>
+      <AdminPageHeader title="Products" count={products.length}>
         <button
+          type="button"
           onClick={() => {
             setShowForm(!showForm)
             clearForm()
           }}
-          className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+          className={ADMIN_BTN_SECONDARY}
         >
           {showForm ? 'Cancel' : '+ Add Product'}
         </button>
-      </div>
+      </AdminPageHeader>
       {showForm && (
         <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-white/15 bg-slate-900/40 p-4 sm:grid-cols-2 xl:grid-cols-3">
           {error && <p className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 sm:col-span-2">{error}</p>}
@@ -446,14 +448,14 @@ export default function AdminProducts() {
             </div>
           </div>
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description (shows on product cards and detail page)" rows={3} className={`${ADMIN_TEXTAREA} sm:col-span-2 xl:col-span-3`} />
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2 xl:col-span-3">
+          <button type="submit" className={`${ADMIN_BTN_PRIMARY} sm:col-span-2 xl:col-span-3`}>
             {editing ? 'Update Product' : 'Create Product'}
           </button>
         </form>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10">
-        <table className="w-full text-left text-sm">
+      <AdminTableWrap>
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead className="border-b border-white/10 bg-white/5 text-xs text-white/50">
             <tr>
               <th className="px-4 py-2">Name</th>
@@ -490,7 +492,7 @@ export default function AdminProducts() {
             ))}
           </tbody>
         </table>
-      </div>
+      </AdminTableWrap>
     </div>
   )
 }

@@ -20,15 +20,15 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[var(--color-primary)]/80 backdrop-blur-xl transition-[background-color,border-color,backdrop-filter] duration-300 ease-out">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-y-2 px-3 py-3 sm:px-4">
-        <Link to="/" className="min-w-0 shrink transition-opacity duration-200 hover:opacity-90">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">ZA.pk Drops</p>
-          <h1 className="max-w-[42vw] truncate text-base font-extrabold leading-tight text-[var(--color-text)] sm:max-w-[14rem] md:max-w-xs lg:max-w-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+        <Link to="/" className="min-w-0 flex-1 transition-opacity duration-200 hover:opacity-90">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/60 sm:tracking-[0.3em]">ZA.pk Drops</p>
+          <h1 className="truncate text-sm font-extrabold leading-tight text-[var(--color-text)] sm:text-base md:max-w-xs lg:max-w-md">
             {activeEvent?.name || 'Loading...'}
           </h1>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
           <div className="relative hidden sm:block">
             <select
               className="appearance-none rounded-full border border-white/20 bg-white/5 py-1.5 pl-3 pr-8 text-xs text-[var(--color-text)] transition-[border-color,background-color,color] duration-200 ease-out focus:border-white/40 focus:outline-none"

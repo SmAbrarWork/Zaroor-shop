@@ -21,7 +21,7 @@ export default function CartIcon() {
     <Link
       to="/cart"
       aria-label={`Shopping bag${count ? `, ${count} items` : ''}`}
-      className="relative inline-flex touch-manipulation items-center justify-center rounded-full p-1.5 transition-colors hover:bg-white/5"
+      className="relative inline-flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-full p-1.5 transition-colors hover:bg-white/5 sm:h-auto sm:w-auto"
     >
       <Motion.span
         key={shakeToken}

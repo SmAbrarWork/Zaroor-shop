@@ -114,13 +114,13 @@ export default function AdminCampaignBanners() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold">Campaign banners</h2>
+        <h2 className="text-lg font-bold sm:text-xl">Campaign banners</h2>
         <p className="mt-1 text-sm text-white/50">
           Full-width promo slides on the home page — glass panels, smooth transitions, and text motion. Scoped per event (like Shopify sections per theme context).
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex w-full max-w-md flex-col gap-1">
         <label className="text-xs text-white/40">Event</label>
         <select
           value={eventId}
@@ -128,7 +128,7 @@ export default function AdminCampaignBanners() {
             setEventId(e.target.value)
             reset()
           }}
-          className={`${ADMIN_SELECT} min-w-[240px]`}
+          className={`${ADMIN_SELECT} w-full`}
         >
           <option value="">Select event…</option>
           {events.map((ev) => (

@@ -11,6 +11,9 @@ import CatalogCtaLink from '../components/ui/CatalogCtaLink'
 import { trackEvent } from '../utils/tracking'
 import api from '../utils/api'
 
+/** Items shown in the horizontal strip before “Browse more” (full grid). */
+const HOT_DROP_STRIP_PREVIEW = 6
+
 export default function Home() {
   const activeEvent = useAppSelector(selectActiveEvent)
   const hotDrops = useAppSelector(selectHotDropProducts)
@@ -40,8 +43,8 @@ export default function Home() {
     )
   }
 
-  const shirtHotDrops = hotDrops.filter((p) => p.productType === 'shirt')
-  const showHot = shirtHotDrops.length > 0
+  const stripProducts = hotDrops.slice(0, HOT_DROP_STRIP_PREVIEW)
+  const hasHotDrops = hotDrops.length > 0
 
   return (
     <div className="space-y-10 pb-10">
@@ -54,31 +57,33 @@ export default function Home() {
       )}
 
       <section id="shop-hot-drops" className="space-y-4 scroll-mt-24" aria-labelledby="hot-drops-heading">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <h2 id="hot-drops-heading" className="text-xl font-black tracking-tight text-[var(--color-text)] sm:text-2xl">
               Hot drops
             </h2>
-            <p className="mt-1 text-sm text-white/55">
-              <strong className="font-bold text-white/90">Hand-picked highlights</strong> for this campaign. Use the{' '}
-              <strong className="font-bold text-white/90">Shirts</strong> tab above to browse all available shirt styles.
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/55">
+              <strong className="font-bold text-white/90">Hand-picked highlights</strong> for this campaign.
+              {hasHotDrops && hotDrops.length > HOT_DROP_STRIP_PREVIEW ? (
+                <span className="text-white/55"> Tap Browse more for the full list.</span>
+              ) : null}
             </p>
           </div>
-          <CatalogCtaLink className="shrink-0 self-start sm:self-center">
-            Browse shirts
-          </CatalogCtaLink>
+          {hasHotDrops ? (
+            <CatalogCtaLink to="/shop/hot-drops" className="w-full sm:w-auto sm:shrink-0 sm:self-center">
+              Browse more
+            </CatalogCtaLink>
+          ) : null}
         </div>
 
-        {showHot ? (
-          <ProductGrid products={shirtHotDrops} layout="strip" />
+        {hasHotDrops ? (
+          <ProductGrid products={stripProducts} layout="strip" />
         ) : (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-12 text-center">
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-10 text-center sm:px-6 sm:py-12">
             <p className="text-sm text-white/55">
-              No hot drops yet for this campaign. Open <strong className="text-white/80">Full catalog</strong> in the menu above, or check back after the team publishes featured picks.
+              No hot drops yet for this campaign. Check back after the team publishes featured picks, or browse{' '}
+              <strong className="text-white/80">Shirts</strong> in the menu above.
             </p>
-            <div className="mt-6 flex justify-center">
-              <CatalogCtaLink>Open full catalog</CatalogCtaLink>
-            </div>
           </div>
         )}
       </section>

@@ -78,11 +78,14 @@ export default function ProductGrid({ products, layout = 'grid' }) {
 
   if (layout === 'strip') {
     return (
-      <section className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5">
+      <section
+        aria-label="Featured products"
+        className="-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-3 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 md:gap-5"
+      >
         {products.map((product, index) => (
           <div
             key={product._id || product.id}
-            className="w-[min(82vw,320px)] shrink-0 snap-start sm:w-[288px] md:w-[304px]"
+            className="w-[min(78vw,300px)] shrink-0 snap-start sm:w-[272px] md:w-[288px] lg:w-[304px]"
           >
             {renderCard(product, index)}
           </div>

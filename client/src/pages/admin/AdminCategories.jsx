@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import api from '../../utils/api'
-import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA } from '../../utils/adminClasses.js'
+import { ADMIN_INPUT, ADMIN_SELECT, ADMIN_TEXTAREA, ADMIN_BTN_PRIMARY, ADMIN_BTN_SECONDARY } from '../../utils/adminClasses.js'
+import AdminTableWrap from '../../components/admin/AdminTableWrap.jsx'
 
 const emptyForm = { name: '', slug: '', description: '', sortOrder: 0 }
 
@@ -93,9 +94,9 @@ export default function AdminCategories() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl space-y-3">
-          <h2 className="text-xl font-bold">Categories</h2>
+          <h2 className="text-lg font-bold sm:text-xl">Categories</h2>
           <p className="text-sm text-white/50">
             Categories belong to a single campaign. Shoppers only see categories for the event they’re viewing — nothing mixes between drops.
           </p>
@@ -109,7 +110,7 @@ export default function AdminCategories() {
             <p className="mt-2 text-xs text-white/55">The shop menu lists these categories so customers can open e.g. Street bottoms and see only that event’s items.</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
           <label className="text-xs text-white/40">Event</label>
           <select
             value={eventId}
@@ -117,7 +118,7 @@ export default function AdminCategories() {
               setEventId(e.target.value)
               resetForm()
             }}
-            className={`${ADMIN_SELECT} min-w-[220px]`}
+            className={`${ADMIN_SELECT} w-full sm:min-w-[220px]`}
           >
             <option value="">Select event…</option>
             {events.map((ev) => (
@@ -140,7 +141,7 @@ export default function AdminCategories() {
               setForm(emptyForm)
             }
           }}
-          className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+          className={ADMIN_BTN_SECONDARY}
         >
           {showForm ? 'Cancel' : '+ Add category'}
         </button>
@@ -175,7 +176,7 @@ export default function AdminCategories() {
             rows={2}
             className={`${ADMIN_TEXTAREA} sm:col-span-2`}
           />
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-500 sm:col-span-2">
+          <button type="submit" className={`${ADMIN_BTN_PRIMARY} sm:col-span-2`}>
             {editingId ? 'Update category' : 'Create category'}
           </button>
         </form>
@@ -188,8 +189,8 @@ export default function AdminCategories() {
       ) : categories.length === 0 ? (
         <p className="text-sm text-white/40">No categories yet for this event.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full text-left text-sm">
+        <AdminTableWrap>
+          <table className="w-full min-w-[520px] text-left text-sm">
             <thead className="border-b border-white/10 bg-white/5 text-xs text-white/50">
               <tr>
                 <th className="px-4 py-2">Order</th>
@@ -218,7 +219,7 @@ export default function AdminCategories() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableWrap>
       )}
     </div>
   )

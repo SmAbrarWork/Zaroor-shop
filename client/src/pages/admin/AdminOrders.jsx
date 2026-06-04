@@ -3,12 +3,9 @@ import { Link } from 'react-router-dom'
 import api from '../../utils/api'
 import { ADMIN_INPUT, ADMIN_SELECT } from '../../utils/adminClasses.js'
 import { formatCurrencyPKR } from '../../utils/dateUtils'
-
-const statusColor = (s) =>
-  s === 'delivered' ? 'bg-green-500/20 text-green-400' :
-  s === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
-  s === 'confirmed' ? 'bg-yellow-500/20 text-yellow-400' :
-  'bg-white/10 text-white/60'
+import { orderStatusColor } from '../../utils/adminStatus.js'
+import AdminPageHeader from '../../components/admin/AdminPageHeader.jsx'
+import AdminTableWrap from '../../components/admin/AdminTableWrap.jsx'
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([])
@@ -43,37 +40,34 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">Orders ({pagination.total})</h2>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={search}
-            onChange={handleSearch}
-            placeholder="Search name, email, phone, city..."
-            className={`${ADMIN_INPUT} w-full max-w-xs`}
-          />
-          <select
-            value={statusFilter}
-            onChange={handleStatusFilter}
-            className={`${ADMIN_SELECT} min-w-[140px]`}
-          >
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-          </select>
-        </div>
-      </div>
+      <AdminPageHeader title="Orders" count={pagination.total}>
+        <input
+          type="text"
+          value={search}
+          onChange={handleSearch}
+          placeholder="Search name, email, phone, city..."
+          className={`${ADMIN_INPUT} w-full sm:max-w-xs`}
+        />
+        <select
+          value={statusFilter}
+          onChange={handleStatusFilter}
+          className={`${ADMIN_SELECT} w-full sm:min-w-[140px] sm:w-auto`}
+        >
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+        </select>
+      </AdminPageHeader>
 
       {loading ? (
         <p className="text-sm text-white/50">Loading...</p>
       ) : orders.length === 0 ? (
         <p className="text-sm text-white/40">No orders found</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full text-left text-sm">
+        <AdminTableWrap>
+          <table className="w-full min-w-[960px] text-left text-sm">
             <thead className="border-b border-white/10 bg-white/5 text-xs text-white/50">
               <tr>
                 <th className="px-3 py-2">Order ID</th>
@@ -133,7 +127,7 @@ export default function AdminOrders() {
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        className={`admin-select max-w-[130px] min-h-0 rounded-full border border-white/20 px-2 py-0.5 text-xs ${statusColor(order.status)}`}
+                        className={`admin-select max-w-[130px] min-h-0 rounded-full border border-white/20 px-2 py-0.5 text-xs ${orderStatusColor(order.status)}`}
                       >
                         <option value="pending">pending</option>
                         <option value="confirmed">confirmed</option>
@@ -178,7 +172,7 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableWrap>
       )}
 
       {pagination.pages > 1 && (
