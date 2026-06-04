@@ -4,17 +4,17 @@
 
 ```
 Zaroor-shop/
-├── client/                 # React (Vite) SPA
-├── server/                 # Express API + `server/api/` (Vercel serverless entry)
-├── scripts/                # e.g. deploy-remote.sh
-├── docs/                   # This documentation
-├── docker-compose*.yml
-└── .env.example            # Optional: Compose project name
+├── client/                 # React (Vite) SPA — built into static files for production
+├── server/                 # Express API
+├── scripts/                # deploy-remote.sh
+├── docs/
+├── deploy/nginx/           # Nginx site config example
+└── docker-compose.yml      # Production stack only
 ```
 
-**Frontend:** SPA (port 3000 in Docker dev).  
-**Backend:** REST API (port 5000 in Docker dev).  
-**Database:** MongoDB Atlas (or local URI in `.env`).
+**Frontend:** static SPA served on port 3000 (inside Docker).  
+**Backend:** REST API on port 5000 (inside Docker).  
+**Database:** MongoDB Atlas (`MONGO_URI` in `server/.env`).
 
 ---
 
@@ -24,7 +24,7 @@ Zaroor-shop/
 2. **Google OAuth** — `/api/auth/google` → callback → redirect to `CLIENT_URL/login?token=…`.
 3. **Admin** — `user.role === 'admin'` unlocks `/admin`.
 
-**Security:** Auth rate limit, Helmet, bcrypt (12 rounds), JWT, CORS from `CLIENT_URL` (comma-separated origins allowed), production error sanitization.
+**Security:** Auth rate limit, Helmet, bcrypt (12 rounds), JWT, CORS from `CLIENT_URL` (comma-separated origins), production error sanitization (no stack traces to clients).
 
 ---
 
@@ -49,51 +49,31 @@ Zaroor-shop/
 
 ## Environment variables
 
-**Values** live in `server/.env` and `client/.env` (never commit). Copy from `*.env.example`.
+Copy **`server/.env.example`** → **`server/.env`** on the VPS and fill in real values. Never commit `.env`.
 
-The server loads `.env` from disk via `dotenv` in `server/src/config/environment.js` and exposes typed defaults; Docker / production can also inject the same variable names without a file.
+Optional root **`.env.production.example`** → **`.env`** only if you need custom `VITE_*` values when Docker builds the client image.
+
+The server loads `server/.env` via `dotenv` in `server/src/config/environment.js`.
 
 ---
 
-## Deployment
+## Deployment (Hostinger VPS)
 
-See **[deploy-hostinger.md](deploy-hostinger.md)** for the full Hostinger checklist (Nginx, DNS, SSL, env files).
-
-### Docker (Hostinger VPS)
-
-On the VPS:
+See **[deploy-hostinger.md](deploy-hostinger.md)** for Nginx, DNS, SSL, and troubleshooting.
 
 ```bash
-cp server/.env.production.example server/.env   # edit with real secrets
-# optional: cp .env.production.example .env     # VITE_* for client image build
-docker compose -f docker-compose.prod.yml up -d --build
+cp server/.env.example server/.env   # edit with real secrets
+# optional: cp .env.production.example .env
+docker compose up -d --build
 ```
 
-Configure **Nginx** on the host (`deploy/nginx/zaroor.shop.conf.example`) so `/` → client:3000 and `/api` → server:5000. Containers bind to `127.0.0.1` only.
+Nginx on the host proxies `/` → client:3000 and `/api` → server:5000. Containers bind to `127.0.0.1` only.
 
-### One-command deploy (git push + VPS pull + compose)
-
-From your machine, with `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, and `DEPLOY_REMOTE_DIR` set (see `.env.deploy.example`):
+### Remote deploy script
 
 ```bash
 set -a && source ./.env.deploy && set +a
 ./scripts/deploy-remote.sh "your message"
-```
-
-### Vercel (optional serverless API)
-
-If you host the API on Vercel instead of the VPS, set **Root Directory** to `server`.  
-Build uses `server/vercel.json` and the serverless entry `server/api/index.js`.
-
----
-
-## Local development
-
-```bash
-docker compose up --build
-# or
-(cd server && npm run dev) & (cd client && npm run dev)
-cd server && npm run seed   # optional; admin in seed script
 ```
 
 ---
@@ -110,5 +90,5 @@ cd server && npm run seed   # optional; admin in seed script
 
 ## Marketing
 
-- **Meta:** client pixel (`VITE_*`); server Conversions API (`META_*` in `server/.env`).
+- **Meta:** client pixel (`VITE_*` build args); server Conversions API (`META_*` in `server/.env`).
 - **GA4:** client gtag (`VITE_*`); server Measurement Protocol (`GA4_*`).

@@ -1,31 +1,31 @@
 # Zaroor Shop
 
-E-commerce storefront: **React + Vite** (`client/`) and **Express + MongoDB** (`server/`).
+Production e-commerce storefront: **React + Vite** (`client/`) and **Express + MongoDB** (`server/`).
 
-## Quick start (local)
-
-- **Env:** `cp server/.env.example server/.env` and `cp client/.env.example client/.env`, then edit.
-- **Run:** `docker compose up --build` or `npm run dev` in `server/` and `client/`.
-- **Seed (optional):** `cd server && npm run seed`
+This repository is set up for **Hostinger VPS deployment** with Docker. There is no separate dev Docker stack—use production builds everywhere you run Docker.
 
 ## Deploy on Hostinger VPS
 
-**Step-by-step guide with every command:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)
+**Full step-by-step guide:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)
 
-Summary:
+1. **Your PC:** push `main` to GitHub
+2. **VPS:** clone → `cp server/.env.example server/.env` → edit secrets → Nginx → DNS → `docker compose up --build -d` → Certbot SSL
+3. **Updates:** `git pull` && `docker compose up --build -d`
 
-1. **Your PC:** `git push origin main`
-2. **VPS:** clone repo → `server/.env` → Nginx → DNS → `docker compose -f docker-compose.prod.yml up --build -d` → Certbot SSL
-3. **Updates:** `git pull` + `docker compose -f docker-compose.prod.yml up --build -d`
-
-You need **`server/.env`** and **Nginx** on the VPS. You do **not** need `client/.env` on the VPS for Docker.
+You need **`server/.env`** and **Nginx** on the VPS. You do **not** need `client/.env`.
 
 ### Optional: deploy from your laptop
 
 ```bash
-cp .env.deploy.example .env.deploy   # edit DEPLOY_* 
+cp .env.deploy.example .env.deploy   # edit DEPLOY_*
 set -a && source ./.env.deploy && set +a
 ./scripts/deploy-remote.sh "your message"
+```
+
+### Optional: Vite build variables (Meta, GA, Google login)
+
+```bash
+cp .env.production.example .env   # on VPS, only if you need custom VITE_* at build time
 ```
 
 ## Docs
@@ -33,10 +33,6 @@ set -a && source ./.env.deploy && set +a
 - [Architecture & API](docs/architecture.md)
 - [Hostinger VPS deploy (step-by-step)](docs/deploy-hostinger.md)
 
-## Configuration (server)
+## Configuration
 
-Runtime keys live in **`server/.env`**. Loaded by `server/src/config/environment.js` (not committed to git).
-
-## Vercel (optional API hosting)
-
-Create a Vercel project with **Root Directory = `server`** for `server/vercel.json` and `server/api/index.js`.
+Runtime secrets live in **`server/.env`** (copy from `server/.env.example`). Never commit `.env` files.

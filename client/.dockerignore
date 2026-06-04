@@ -2,7 +2,7 @@ node_modules
 dist
 .git
 npm-debug.log
-# Dev-only env; production build uses Dockerfile ARG/ENV (see docker-compose.prod.yml)
+# Local .env files are not copied; build uses Dockerfile ARG/ENV (see docker-compose.yml)
 .env
 .env.local
 .env.*.local

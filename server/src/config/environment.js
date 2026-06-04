@@ -2,7 +2,7 @@
  * Central configuration loaded from environment variables.
  *
  * Secrets and deployment values belong in `server/.env` (see `.env.example`).
- * This module calls dotenv (for local/dev), parses types, applies defaults, and
+ * This module calls dotenv when `server/.env` exists, parses types, applies defaults, and
  * exports a single `env` object so the rest of the app never reads process.env directly.
  */
 import path from 'path'

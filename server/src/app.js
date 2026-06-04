@@ -22,7 +22,7 @@ import { swaggerSpec } from './config/swagger.js'
 
 const app = express()
 
-if (process.env.VERCEL || env.nodeEnv === 'production') {
+if (env.nodeEnv === 'production') {
   app.set('trust proxy', 1)
 }
 

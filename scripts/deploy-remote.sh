@@ -9,7 +9,7 @@
 #   ./scripts/deploy-remote.sh "your commit message"
 #
 # Env overrides: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_REMOTE_DIR,
-#   DEPLOY_COMPOSE_FILE (default: docker-compose.prod.yml)
+#   DEPLOY_COMPOSE_FILE (default: docker-compose.yml)
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ cd "$repo_root"
 ssh_key="${DEPLOY_SSH_KEY:-}"
 host="${DEPLOY_HOST:-}"
 remote_dir="${DEPLOY_REMOTE_DIR:-}"
-compose_file="${DEPLOY_COMPOSE_FILE:-docker-compose.prod.yml}"
+compose_file="${DEPLOY_COMPOSE_FILE:-docker-compose.yml}"
 
 if [[ -z "$ssh_key" || -z "$host" || -z "$remote_dir" ]]; then
   cat >&2 <<'EOF'
