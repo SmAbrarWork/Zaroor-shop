@@ -15,13 +15,15 @@ This repository is set up for **Hostinger VPS deployment** with Docker. There is
 
 You need **`server/.env`** and **Nginx** on the VPS. Browser `VITE_*` vars use repo root **`.env`** when needed ([marketing-tracking.md](docs/marketing-tracking.md)).
 
-### Deploy from your laptop
+### Deploy from your laptop (one command)
 
 ```bash
-cp .env.deploy.example .env.deploy   # edit DEPLOY_*
-set -a && source ./.env.deploy && set +a
-./scripts/deploy-push.sh "your message"
+cp .env.deploy.example .env.deploy   # edit once
+nano .env.deploy
+./scripts/deploy.sh "your commit message"
 ```
+
+Pushes to GitHub over SSH, then VPS pulls, rebuilds Docker, and goes live.
 
 ### Auto-deploy (GitHub Actions)
 

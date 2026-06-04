@@ -69,20 +69,26 @@ VPS script: `scripts/deploy-vps.sh`
 
 ---
 
-## Manual deploy from laptop
+## Manual deploy from laptop (recommended script)
+
+One command from your project folder:
 
 ```bash
 cp .env.deploy.example .env.deploy
 nano .env.deploy
-
-set -a && source ./.env.deploy && set +a
-./scripts/deploy-push.sh "describe your change"
+./scripts/deploy.sh "describe your change"
 ```
 
-Deploy without a new commit (already pushed):
+What it does:
+
+1. `git commit` + `git push origin main` (GitHub over SSH)
+2. SSH to VPS → `git pull` → `docker compose up --build -d` → health check
+
+Other modes:
 
 ```bash
-./scripts/deploy-push.sh --deploy-only
+./scripts/deploy.sh --push-deploy    # already committed; only push + deploy
+./scripts/deploy.sh --deploy-only    # already on GitHub; only update VPS
 ```
 
 ---
