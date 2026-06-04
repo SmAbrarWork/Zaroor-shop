@@ -38,7 +38,7 @@ cd /home/smphoenix/Documents/personal/zaroor/Zaroor-shop
 git status
 ```
 
-Make sure **`server/.env`** and **`.env.deploy`** are **not** listed (they must stay local only).
+Make sure **`server/.env`** is **not** listed (it must stay local only).
 
 ## Step 1.3 — Stage and commit
 
@@ -398,22 +398,33 @@ Must match `GOOGLE_CALLBACK_URL` in `server/.env`.
 
 # Part 13 — Deploy updates later (every new release)
 
-**Recommended:** push to `main` and let GitHub Actions deploy automatically.  
-See **[deploy-automation.md](deploy-automation.md)** for secrets setup.
+## On your laptop
 
-## On your computer (manual)
+Push your changes to GitHub:
 
 ```bash
-set -a && source ./.env.deploy && set +a
-./scripts/deploy-push.sh "Describe your change"
+git add -A
+git commit -m "Describe your change"
+git push origin main
 ```
 
-## On the VPS only
+## On the VPS (pull + rebuild + live)
 
 ```bash
+ssh root@YOUR_VPS_IP
 cd /var/www/Zaroor-shop
-./scripts/deploy-vps.sh
+./scripts/go-live.sh
 ```
+
+This script: stops Docker → `git pull origin main` → `docker compose up --build -d` → health check.
+
+First time on VPS, make it executable:
+
+```bash
+chmod +x /var/www/Zaroor-shop/scripts/go-live.sh
+```
+
+Verify in browser: **https://zaroor.shop**
 
 If you changed `VITE_*` in root `.env`, the `up --build` step rebuilds the client image automatically.
 
@@ -422,35 +433,6 @@ If you only changed `server/.env` (no code change):
 ```bash
 docker compose -f docker-compose.yml up -d --force-recreate server
 ```
-
----
-
-# Part 14 — Optional: deploy from your laptop in one command
-
-One-time setup on your computer:
-
-```bash
-cd /path/to/Zaroor-shop
-cp .env.deploy.example .env.deploy
-nano .env.deploy
-```
-
-Set:
-
-```env
-DEPLOY_SSH_KEY=~/.ssh/hostinger_vps
-DEPLOY_HOST=root@YOUR_VPS_IP
-DEPLOY_REMOTE_DIR=/var/www/Zaroor-shop
-```
-
-Then each release:
-
-```bash
-set -a && source ./.env.deploy && set +a
-./scripts/deploy-remote.sh "Your commit message"
-```
-
-This commits, pushes, SSHs to the VPS, runs `git pull`, and rebuilds Docker.
 
 ---
 

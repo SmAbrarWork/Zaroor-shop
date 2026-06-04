@@ -69,11 +69,13 @@ docker compose up -d --build
 
 Nginx on the host proxies `/` → client:3000 and `/api` → server:5000. Containers bind to `127.0.0.1` only.
 
-### Remote deploy script
+### Go live after a GitHub push
+
+On the VPS:
 
 ```bash
-set -a && source ./.env.deploy && set +a
-./scripts/deploy-remote.sh "your message"
+cd /var/www/Zaroor-shop
+./scripts/go-live.sh
 ```
 
 ---

@@ -2,32 +2,27 @@
 
 Production e-commerce storefront: **React + Vite** (`client/`) and **Express + MongoDB** (`server/`).
 
-This repository is set up for **Hostinger VPS deployment** with Docker. There is no separate dev Docker stack—use production builds everywhere you run Docker.
+This repository is set up for **Hostinger VPS deployment** with Docker.
 
 ## Deploy on Hostinger VPS
 
-**First-time setup:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)  
-**Auto-deploy on push to `main`:** [docs/deploy-automation.md](docs/deploy-automation.md)
+**First-time setup:** [docs/deploy-hostinger.md](docs/deploy-hostinger.md)
 
 1. **VPS (once):** clone → `server/.env` → Nginx → DNS → `docker compose up --build -d` → Certbot
-2. **GitHub (once):** add Actions secrets → every **`git push origin main`** deploys automatically
-3. **Or laptop:** `./scripts/deploy-push.sh "your message"`
+2. **Your laptop:** push changes to GitHub (`git push origin main`)
+3. **VPS (every update):** `./scripts/go-live.sh` — pull, rebuild, live
 
 You need **`server/.env`** and **Nginx** on the VPS. Browser `VITE_*` vars use repo root **`.env`** when needed ([marketing-tracking.md](docs/marketing-tracking.md)).
 
-### Deploy from your laptop (one command)
+### Update live site (on VPS)
+
+After you push to GitHub from your laptop:
 
 ```bash
-cp .env.deploy.example .env.deploy   # edit once
-nano .env.deploy
-./scripts/deploy.sh "your commit message"
+ssh root@187.127.119.183
+cd /var/www/Zaroor-shop
+./scripts/go-live.sh
 ```
-
-Pushes to GitHub over SSH, then VPS pulls, rebuilds Docker, and goes live.
-
-### Auto-deploy (GitHub Actions)
-
-Push to **`main`** runs `.github/workflows/deploy-hostinger.yml` → VPS runs `scripts/deploy-vps.sh` (pull, rebuild, health check).
 
 ### Optional: Vite build variables (Meta, GA, Google login)
 
@@ -39,7 +34,6 @@ cp .env.production.example .env   # on VPS, only if you need custom VITE_* at bu
 
 - [Architecture & API](docs/architecture.md)
 - [Hostinger VPS deploy (step-by-step)](docs/deploy-hostinger.md)
-- [Auto-deploy GitHub → Hostinger](docs/deploy-automation.md)
 - [Meta Pixel & GA4 setup](docs/marketing-tracking.md)
 
 ## Configuration
