@@ -31,7 +31,6 @@ mongo_data/
 # SSH keys (never commit)
 *.pem
 AWS-ki-pem-file/
-.env.deploy
 
 # Coverage
 coverage/

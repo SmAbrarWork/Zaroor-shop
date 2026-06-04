@@ -6,7 +6,7 @@
 Zaroor-shop/
 ├── client/                 # React (Vite) SPA — built into static files for production
 ├── server/                 # Express API
-├── scripts/                # deploy-remote.sh
+├── scripts/                # go-live.sh (VPS update script)
 ├── docs/
 ├── deploy/nginx/           # Nginx site config example
 └── docker-compose.yml      # Production stack only

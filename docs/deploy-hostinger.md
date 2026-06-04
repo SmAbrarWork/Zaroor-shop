@@ -27,7 +27,7 @@ Internet → Nginx (80/443) → Docker client :3000 (website)
 ## Step 1.1 — Go to the project folder
 
 ```bash
-cd /home/smphoenix/Documents/personal/zaroor/Zaroor-shop
+cd ~/path/to/Zaroor-shop
 ```
 
 (Use your actual path if different.)
@@ -283,7 +283,7 @@ sudo systemctl reload nginx
 
 ```bash
 cd /var/www/Zaroor-shop
-docker compose -f docker-compose.yml up --build -d
+docker compose up --build -d
 ```
 
 First build may take several minutes.
@@ -291,7 +291,7 @@ First build may take several minutes.
 ## Step 8.2 — Check container status
 
 ```bash
-docker compose -f docker-compose.yml ps
+docker compose ps
 ```
 
 Both `server` and `client` should show **healthy** (may take ~1 minute).
@@ -299,13 +299,13 @@ Both `server` and `client` should show **healthy** (may take ~1 minute).
 ## Step 8.3 — View logs if something fails
 
 ```bash
-docker compose -f docker-compose.yml logs -f server
+docker compose logs -f server
 ```
 
 Press `Ctrl+C` to stop following logs.
 
 ```bash
-docker compose -f docker-compose.yml logs -f client
+docker compose logs -f client
 ```
 
 ## Step 8.4 — Test API on the VPS (before SSL)
@@ -357,7 +357,7 @@ Creates sample products/admin if your seed script is configured:
 
 ```bash
 cd /var/www/Zaroor-shop
-docker compose -f docker-compose.yml exec server npm run seed
+docker compose exec server npm run seed
 ```
 
 ---
@@ -431,7 +431,7 @@ If you changed `VITE_*` in root `.env`, the `up --build` step rebuilds the clien
 If you only changed `server/.env` (no code change):
 
 ```bash
-docker compose -f docker-compose.yml up -d --force-recreate server
+docker compose up -d --force-recreate server
 ```
 
 ---
@@ -449,15 +449,15 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 sudo cp deploy/nginx/zaroor.shop.conf.example /etc/nginx/sites-available/zaroor.shop
 sudo ln -sf /etc/nginx/sites-available/zaroor.shop /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-docker compose -f docker-compose.yml up --build -d
+docker compose up --build -d
 sudo certbot --nginx -d zaroor.shop -d www.zaroor.shop
 curl -s https://zaroor.shop/api/health
 ```
 
-**VPS update:**
+**VPS update (after git push):**
 
 ```bash
-cd /var/www/Zaroor-shop && git pull && docker compose -f docker-compose.yml up --build -d
+cd /var/www/Zaroor-shop && ./scripts/go-live.sh
 ```
 
 ---
@@ -466,12 +466,12 @@ cd /var/www/Zaroor-shop && git pull && docker compose -f docker-compose.yml up -
 
 | Problem | Command / fix |
 |---------|----------------|
-| Container not healthy | `docker compose -f docker-compose.yml logs server` |
-| CORS errors in browser | Fix `CLIENT_URL` in `server/.env`, then `docker compose -f docker-compose.yml up -d --force-recreate server` |
+| Container not healthy | `docker compose logs server` |
+| CORS errors in browser | Fix `CLIENT_URL` in `server/.env`, then `docker compose up -d --force-recreate server` |
 | Site loads, API 404 | Nginx not proxying `/api` — redo Part 7 |
 | `git pull` auth failed | Use HTTPS clone or add SSH deploy key on GitHub |
 | Certbot fails | DNS must point to VPS first (Part 6) |
-| Restart everything | `docker compose -f docker-compose.yml down && docker compose -f docker-compose.yml up --build -d` |
+| Restart everything | `cd /var/www/Zaroor-shop && ./scripts/go-live.sh` |
 
 ---
 
@@ -484,7 +484,7 @@ cd /var/www/Zaroor-shop && git pull && docker compose -f docker-compose.yml up -
 - [ ] `CLIENT_URL` has `https://zaroor.shop` and `https://www.zaroor.shop`
 - [ ] DNS A records → VPS IP
 - [ ] Nginx enabled and tested (`sudo nginx -t`)
-- [ ] `docker compose -f docker-compose.yml ps` → healthy
+- [ ] `docker compose ps` → healthy
 - [ ] `curl https://zaroor.shop/api/health` → success
 - [ ] HTTPS works in browser
 - [ ] Google OAuth URLs updated (if used)
