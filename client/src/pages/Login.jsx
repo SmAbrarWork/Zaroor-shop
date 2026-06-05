@@ -120,6 +120,8 @@ export default function Login() {
     window.location.href = `${API_ORIGIN}/auth/google`
   }
 
+  const suggestGoogle = typeof error === 'string' && error.toLowerCase().includes('google')
+
   return (
     <div className="mx-auto max-w-md space-y-6">
       {/* Tab switcher */}
@@ -162,7 +164,13 @@ export default function Login() {
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div
+          className={`rounded-xl px-4 py-3 text-sm ${
+            suggestGoogle
+              ? 'border border-[var(--color-accent)]/35 bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-white/90'
+              : 'border border-red-500/30 bg-red-500/10 text-red-300'
+          }`}
+        >
           {error}
         </div>
       )}
@@ -221,8 +229,13 @@ export default function Login() {
       </div>
 
       <button
+        type="button"
         onClick={handleGoogle}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 hover:bg-white/10"
+        className={`flex w-full items-center justify-center gap-3 rounded-full border px-6 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 hover:bg-white/10 ${
+          suggestGoogle
+            ? 'border-[var(--color-accent)]/50 bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] ring-2 ring-[var(--color-accent)]/30'
+            : 'border-white/20 bg-white/5'
+        }`}
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
