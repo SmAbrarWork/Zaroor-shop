@@ -16,12 +16,19 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Input too long' })
     }
 
-    const existing = await User.findOne({ email })
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const existing = await User.findOne({ email: normalizedEmail })
     if (existing) {
+      if (existing.googleId && !existing.password) {
+        return res.status(409).json({
+          success: false,
+          message: 'This email is registered with Google. Use Continue with Google to sign in.',
+        })
+      }
       return res.status(409).json({ success: false, message: 'Email already registered' })
     }
 
-    const user = await User.create({ name, email, password })
+    const user = await User.create({ name, email: normalizedEmail, password })
     const token = generateToken(user._id)
     return res.status(201).json({ success: true, data: { user, token } })
   } catch (error) {

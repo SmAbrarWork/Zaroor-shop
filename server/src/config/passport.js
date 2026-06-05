@@ -9,7 +9,15 @@ passport.use(
     try {
       const normalized = String(email ?? '').trim().toLowerCase()
       const user = await User.findOne({ email: normalized })
-      if (!user || !user.password) {
+      if (!user) {
+        return done(null, false, { message: 'Invalid email or password' })
+      }
+      if (!user.password) {
+        if (user.googleId) {
+          return done(null, false, {
+            message: 'This account uses Google sign-in. Tap Continue with Google below.',
+          })
+        }
         return done(null, false, { message: 'Invalid email or password' })
       }
       const isMatch = await user.comparePassword(password)
