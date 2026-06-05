@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import SafeProductImage from '../ui/SafeProductImage'
+import { parseHashHref, scrollToSection } from '../../utils/scrollToSection.js'
 
 const GLASS_PANEL = {
   light: 'border border-white/20 bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md',
@@ -16,19 +17,49 @@ const titleVariants = {
 }
 
 function Cta({ label, href }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+
   if (!label?.trim()) return null
-  const isExternal = /^https?:\/\//i.test(href)
+
+  const trimmed = (href || '').trim()
+  const isExternal = /^https?:\/\//i.test(trimmed)
+  const hashTarget = parseHashHref(trimmed)
   const className =
     'mx-auto inline-flex min-h-[44px] items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] px-6 text-sm font-bold text-[var(--color-text)] shadow-[0_10px_40px_-12px_color-mix(in_srgb,var(--color-accent)_45%,transparent)] transition-transform hover:-translate-y-px sm:mx-0'
+
+  const goToHash = (e) => {
+    e.preventDefault()
+    const onHome = location.pathname === hashTarget.pathname
+    if (onHome) {
+      scrollToSection(hashTarget.hash)
+      return
+    }
+    navigate({ pathname: hashTarget.pathname, hash: hashTarget.hash })
+  }
+
   if (isExternal) {
     return (
-      <a href={href} target="_blank" rel="noreferrer" className={className}>
+      <a href={trimmed} target="_blank" rel="noreferrer" className={className}>
         {label}
       </a>
     )
   }
+
+  if (hashTarget) {
+    return (
+      <a
+        href={`${hashTarget.pathname}#${hashTarget.hash}`}
+        onClick={goToHash}
+        className={className}
+      >
+        {label}
+      </a>
+    )
+  }
+
   return (
-    <Link to={href || '/shop/all'} className={className}>
+    <Link to={trimmed || '/shop/all'} className={className}>
       {label}
     </Link>
   )

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { scrollToSection } from '../utils/scrollToSection.js'
 import { useAppSelector } from '../app/hooks'
 import { selectActiveEvent } from '../features/event/eventSelectors'
 import { selectHotDropProducts } from '../features/products/productSelectors'
@@ -22,6 +24,7 @@ const sheetMotion = {
 }
 
 export default function Home() {
+  const location = useLocation()
   const activeEvent = useAppSelector(selectActiveEvent)
   const hotDrops = useAppSelector(selectHotDropProducts)
   const [campaignBanners, setCampaignBanners] = useState([])
@@ -31,6 +34,13 @@ export default function Home() {
     if (!activeEvent) return
     trackEvent('campaign_view', { eventSlug: activeEvent.slug })
   }, [activeEvent])
+
+  useEffect(() => {
+    const id = location.hash?.replace(/^#/, '')
+    if (!id) return
+    const t = window.setTimeout(() => scrollToSection(id), 150)
+    return () => window.clearTimeout(t)
+  }, [location.pathname, location.hash, activeEvent?.slug])
 
   useEffect(() => {
     if (!activeEvent?.slug) {
@@ -62,7 +72,7 @@ export default function Home() {
         <EventBanner text={activeEvent.bannerText} />
       )}
 
-      <section id="shop-hot-drops" className="space-y-4 scroll-mt-24" aria-labelledby="hot-drops-heading">
+      <section id="shop-hot-drops" className="space-y-4 scroll-mt-[calc(var(--site-sticky-top)+1rem)]" aria-labelledby="hot-drops-heading">
         <div className="flex flex-col items-center gap-3 border-b border-white/10 pb-4 text-center sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:text-left">
           <div className="min-w-0 flex-1">
             <h2 id="hot-drops-heading" className="text-xl font-black tracking-tight text-[var(--color-text)] sm:text-2xl">

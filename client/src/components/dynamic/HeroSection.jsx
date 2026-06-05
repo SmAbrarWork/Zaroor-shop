@@ -2,14 +2,16 @@ import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import SafeProductImage from '../ui/SafeProductImage'
+import { scrollToSection } from '../../utils/scrollToSection.js'
 
 export default function HeroSection({ event }) {
   const MotionHeading = motion.h2
   const MotionPanel = motion.div
 
   const scrollToProducts = () => {
-    const el = document.getElementById('shop-hot-drops') || document.getElementById('product-grid')
-    el?.scrollIntoView({ behavior: 'smooth' })
+    if (!scrollToSection('shop-hot-drops')) {
+      scrollToSection('product-grid')
+    }
   }
 
   return (
