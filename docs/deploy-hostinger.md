@@ -436,6 +436,22 @@ docker compose up -d --force-recreate server
 
 ---
 
+# Part 14 — Automatic deploy on every `git push` (optional)
+
+Use **GitHub Actions** so you only push to `main` and the VPS updates itself (no manual `go-live.sh`).
+
+**Full setup (SSH keys + GitHub secrets):** [deploy-github-actions.md](deploy-github-actions.md)
+
+After setup, your daily workflow is:
+
+```bash
+git push origin main
+```
+
+Check runs under GitHub → **Actions** → **Deploy to VPS**.
+
+---
+
 # Quick reference — commands only
 
 **VPS first deploy:**

@@ -14,7 +14,12 @@ This repository is set up for **Hostinger VPS deployment** with Docker.
 
 You need **`server/.env`** and **Nginx** on the VPS. Browser `VITE_*` vars use repo root **`.env`** when needed ([marketing-tracking.md](docs/marketing-tracking.md)).
 
-### Update live site (on VPS)
+### Automatic deploy via GitHub Actions (optional)
+
+One-time setup: **[docs/deploy-github-actions.md](docs/deploy-github-actions.md)**  
+After setup, pushing to `main` deploys automatically (GitHub Actions SSHs to VPS and runs `scripts/deploy-vps.sh`).
+
+### Update live site manually (on VPS)
 
 After you push to GitHub from your laptop:
 
@@ -35,6 +40,7 @@ cp .env.production.example .env   # on VPS, only if you need custom VITE_* at bu
 - [Architecture & API](docs/architecture.md)
 - [Hostinger VPS deploy (step-by-step)](docs/deploy-hostinger.md)
 - [Meta Pixel & GA4 setup](docs/marketing-tracking.md)
+- [GitHub Actions SSH pipeline](docs/deploy-github-actions.md)
 
 ## Configuration
 
