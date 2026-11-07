@@ -36,6 +36,9 @@ export const env = {
   metaConversionsToken: process.env.META_CONVERSIONS_TOKEN ?? '',
   ga4MeasurementId: process.env.GA4_MEASUREMENT_ID ?? '',
   ga4ApiSecret: process.env.GA4_API_SECRET ?? '',
+  /** Used by the seed script only. Not read by the API at runtime. */
+  adminEmail: process.env.ADMIN_EMAIL ?? 'zaroor.shop1@gmail.com',
+  adminPassword: process.env.ADMIN_PASSWORD ?? 'admin',
 }
 
 const weakJwtDefaults = new Set([

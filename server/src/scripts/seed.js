@@ -7,6 +7,8 @@ import { User } from '../models/User.js'
 import { ShopSettings } from '../models/ShopSettings.js'
 import { CampaignBanner } from '../models/CampaignBanner.js'
 import { SHIPPING_DESTINATIONS } from '../constants/shippingDestinations.js'
+import { appendInvestorCampaigns } from './investorCampaigns.js'
+import { assignUniqueCatalogImages } from './catalogImages.js'
 
 /**
  * Demo PKR per item × zone — clearly different by destination so checkout totals change visibly.
@@ -984,6 +986,10 @@ async function seed() {
   try {
     await mongoose.connect(mongoUri)
     console.log('Connected to MongoDB')
+    console.log('Database:', mongoose.connection.name)
+
+    appendInvestorCampaigns({ events, categoryDefs, productDefs, campaignBannerDefs, IMG })
+    assignUniqueCatalogImages({ events, productDefs, campaignBannerDefs })
 
     await Product.deleteMany({})
     await Category.deleteMany({})
@@ -1039,16 +1045,17 @@ async function seed() {
       .filter(Boolean)
     if (bannersToInsert.length) await CampaignBanner.insertMany(bannersToInsert)
 
-    // Seed admin user (upsert so re-running is safe)
-    const adminEmail = 'zaroor.shop1@gmail.com'
+    // Seed admin user (upsert so re-running is safe). Email and password come from server/.env.
+    const adminEmail = env.adminEmail
     const existingAdmin = await User.findOne({ email: adminEmail })
     if (!existingAdmin) {
-      await User.create({ name: 'Admin', email: adminEmail, password: 'admin', role: 'admin' })
-      console.log('Created admin user: zaroor.shop1@gmail.com / admin')
+      await User.create({ name: 'Admin', email: adminEmail, password: env.adminPassword, role: 'admin' })
+      console.log(`Created admin user: ${adminEmail}`)
     } else {
       existingAdmin.role = 'admin'
+      existingAdmin.password = env.adminPassword
       await existingAdmin.save()
-      console.log('Admin user already exists, role ensured')
+      console.log(`Admin user updated: ${adminEmail}`)
     }
 
     await ShopSettings.findOneAndUpdate(
