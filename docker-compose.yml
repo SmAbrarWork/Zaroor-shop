@@ -1,8 +1,10 @@
-# Production stack for Hostinger VPS (and any Docker host).
-# Bind ports to localhost only — Nginx on the host terminates SSL and proxies:
-#   /     -> client:3000
-#   /api  -> server:5000
-# See deploy/nginx/zaroor.shop.conf.example and docs/deploy-hostinger.md
+# Second site on a shared VPS. This project name stays separate from other Compose apps.
+# Nginx on the host publishes the shop on port 8080 and proxies:
+#   /     -> 127.0.0.1:3000
+#   /api  -> 127.0.0.1:5000
+# See deploy/nginx/zaroor-vps-8080.conf
+
+name: zaroor-shop
 
 services:
   server:
@@ -10,7 +12,10 @@ services:
       context: ./server
       dockerfile: Dockerfile
     env_file:
-      - ./server/.env
+      - ./server/.env.example
+    environment:
+      NODE_ENV: production
+      CLIENT_URL: http://187.77.148.28:8080
     ports:
       - '127.0.0.1:5000:5000'
     restart: unless-stopped
