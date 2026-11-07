@@ -1,16 +1,19 @@
 /**
  * Central configuration loaded from environment variables.
  *
- * Secrets and deployment values belong in `server/.env` (see `.env.example`).
- * This module calls dotenv when `server/.env` exists, parses types, applies defaults, and
- * exports a single `env` object so the rest of the app never reads process.env directly.
+ * Loads `server/.env` when it exists. A clone with no `.env` uses `server/.env.example`.
+ * This module parses types, applies defaults, and exports a single `env` object so the
+ * rest of the app never reads process.env directly.
  */
+import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-dotenv.config({ path: path.join(__dirname, '../../.env') })
+const envFile = path.join(__dirname, '../../.env')
+const exampleFile = path.join(__dirname, '../../.env.example')
+dotenv.config({ path: fs.existsSync(envFile) ? envFile : exampleFile })
 
 const clientUrlRaw = process.env.CLIENT_URL ?? 'http://localhost:3000'
 const clientUrls = clientUrlRaw
