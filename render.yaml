@@ -1,0 +1,45 @@
+# Free Render deploy: Express API + Vite shop.
+# The API sleeps after 15 minutes of no traffic. The shop stays up.
+# MONGO_URI is entered in the Render dashboard. Do not put it in this file.
+
+services:
+  - type: web
+    name: zaroor-shop-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        fromService:
+          name: zaroor-shop-web
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: zaroor-shop-web
+    runtime: static
+    buildCommand: cd client && npm ci && VITE_API_BASE_URL="${VITE_API_BASE_URL%/}/api" npm run build
+    staticPublishPath: ./client/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: zaroor-shop-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
